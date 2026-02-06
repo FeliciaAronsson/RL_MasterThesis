@@ -14,22 +14,31 @@ class HedgingEnv:
         self.initPosition = initPosition
         self.rate = r
 
-    def step(self):
-        moneyness = self.spot / self.strike
-        timeToMaturity = self.maturity
-        position = self.initPosition
+    def step(self, action):
+        ttm_prev = self.maturity
+        pos_prev = self.initPosition
 
-        #GBM
-        spot_next = self.spot * ((1 + self.mu * self.dT) + (np.random.randn() * self.vol) * np.sqrt(self.dT))
-        timeToMaturity_next = max(0, self.maturity - self.dT)
+        spot_prev = self.spot
 
+        # GBM
+        spot_next = spot_prev * ((1 + self.mu * self.dT) + (np.random.randn() * self.vol) * np.sqrt(self.dT))
+        ttm_next = max(0, self.maturity - self.dT)
+
+        done = ttm_next < 1e-8
+
+        # Reward P&L
+        step_reward = ((spot_next - spot_prev) * self.initPosition 
+                       - abs(action - pos_prev) * spot_next * self.kappa 
+                       - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
+                       + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
         
-
+        if done: 
+            step_reward -= action * spot_next * self.kappa
         
+        reward = step_reward - self.c * step_reward**2
 
-
-
-        return timeToMaturity_next
+        state = np.array([spot_next / self.strike, ttm_next, action])
+        return reward, state
     
     def reset(self):
         restartState = np.array([self.spot / self.strike, self.maturity, self.initPosition])
