@@ -1,5 +1,6 @@
 from env.hedging_env import HedgingEnv
 import numpy as np
+from utils.bs import bs_delta
 
 variables = {
     "SpotPrice": 100,
@@ -23,3 +24,5 @@ env = HedgingEnv(100, 100, 21*3/250, 0.2, 0.05, 1/250, 0.0, 0, 0, 0)
 
 testStep = env.step(1)
 print(testStep)
+
+print(bs_delta(50, 50, 0.1, 0.25, 0.3))
