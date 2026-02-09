@@ -17,7 +17,6 @@ class HedgingEnv:
     def step(self, action):
         ttm_prev = self.maturity
         pos_prev = self.initPosition
-
         spot_prev = self.spot
 
         # GBM
@@ -27,10 +26,10 @@ class HedgingEnv:
         done = ttm_next < 1e-8
 
         # Reward P&L
-        step_reward = ((spot_next - spot_prev) * self.initPosition 
-                       - abs(action - pos_prev) * spot_next * self.kappa 
-                       - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
-                       + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
+        step_reward = ((spot_next - spot_prev) * action 
+                       - abs((action - pos_prev) * spot_next) * self.kappa 
+                       + bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
+                       - bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
         
         if done: 
             step_reward -= action * spot_next * self.kappa
@@ -41,5 +40,5 @@ class HedgingEnv:
         return reward, state
     
     def reset(self):
-        restartState = np.array([self.spot / self.strike, self.maturity, self.initPosition])
-        return restartState
+        initial_state = np.array([self.spot / self.strike, self.maturity, self.initPosition])
+        return initial_state
