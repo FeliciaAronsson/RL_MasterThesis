@@ -13,3 +13,9 @@ def bs_delta(S, K, r, T, sigma):
         return 1.0 if S > K else 0.0
     d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
     return norm.cdf(d1)
+
+def soft_update(target, source, tau):
+    for t_param, s_param in zip(target.parameters(), source.parameters()):
+        t_param.data.copy_(
+            tau * s_param.data + (1.0 - tau) * t_param.data
+        )

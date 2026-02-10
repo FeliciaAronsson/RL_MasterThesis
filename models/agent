@@ -1,26 +1,6 @@
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
-
-class Actor(nn.Module):
-    def __init__(self, obs_dim, act_dim, hidden_dim=64):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(obs_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, act_dim),
-            nn.Tanh()
-        )
-
-    def forward(self, x):
-        return self.net(x)
-
-
-
 from models.actor import Actor
+
 from models.critic import Critic
 import torch
 import torch.nn as nn
@@ -53,5 +33,4 @@ class DDPGAgent:
     def update_targets(self):
         soft_update(self.target_actor, self.actor, self.tau)
         soft_update(self.target_critic, self.critic, self.tau)
-
 
