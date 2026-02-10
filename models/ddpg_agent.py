@@ -26,7 +26,7 @@ class DDPGAgent:
 
         self.buffer = ReplayBuffer()
 
-
+    # Policy (chose an action a given a state s)
     def select(self, s):
         with torch.no_grad():
             return self.actor(torch.tensor(s).float().unsqueeze(0)).item()
