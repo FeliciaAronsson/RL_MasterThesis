@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 class Actor(nn.Module):
-    def __init__(self, obs_dim, act_dim, hidden_dim=64):
+    def __init__(self, obs_dim, act_dim, hidden_dim):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(obs_dim, hidden_dim),

@@ -1,9 +1,8 @@
 from env.hedging_env import HedgingEnv
 import numpy as np
 
-
 # DiscountFactor, gammma = 0.9995
- # TargetSmoothFactor, tau
+# TargetSmoothFactor, tau
 
 variables = {
     "SpotPrice": 100,
@@ -24,19 +23,18 @@ np.random.seed(0)
                 #(spot, strike, maturity, vol, mu, dT, kappa, c, initPosition, r):
 env = HedgingEnv(100, 100, 21*3/250, 0.2, 0.05, 1/250, 0.01, 1.5, 0, 0)
 
-
 from collections import deque
 from models.agent import DDPGAgent
 from models.agent import soft_update
 import torch
 import torch.nn as nn
-from models.buffer import ReplayBuffer
+from utils.replay_buffer import ReplayBuffer
 max_episodes = 50
-max_steps = int(21*3 / 250)   # maturity/dT
+max_steps = 10   # maturity/dT
 gamma = 0.9995
 tau = 5e-4
-obs_dim = 64
-act_dim = 64
+obs_dim = 3
+act_dim = 1
 hidden_dim = 64
 batch_size = 256
 
@@ -44,7 +42,7 @@ batch_size = 256
 score_window = deque(maxlen=200)
 stop_avg_reward = -40
 
-agent = DDPGAgent(obs_dim, act_dim, tau, gamma)
+agent = DDPGAgent(obs_dim, act_dim, hidden_dim, tau, gamma)
 
 for episode in range(max_episodes):
 
@@ -59,17 +57,17 @@ for episode in range(max_episodes):
         with torch.no_grad():
             action = agent.actor(state_tensor).cpu().numpy()[0]
 
-        action += np.random.normal(0, 0.1, size=act_dim)  # exploration noise
-        next_state, reward, terminated, truncated, _ = env.step(action)
-        done = terminated or truncated
+        action = float(action)  # ← THIS IS THE FIX
+        action += np.random.normal(0, 0.1) #, size=act_dim)  # exploration noise
+        reward, next_state, done = env.step(action)
+        
 
-        ReplayBuffer.add(state, action, reward, next_state, done)
+        agent.buffer.add(state, action, reward, next_state, done)
         episode_reward += reward
-
         state = next_state
 
         # --- LEARN ---
-        if ReplayBuffer.size() > batch_size:
+        if len(agent.buffer) > batch_size:
             batch = ReplayBuffer.sample(batch_size)
 
             s, a, r, s_next, d = batch

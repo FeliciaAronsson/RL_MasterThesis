@@ -41,7 +41,7 @@ class HedgingEnv:
         reward = step_reward - self.c * step_reward**2
 
         state = np.array([spot_next / self.strike, ttm_next, action])
-        return reward, state
+        return reward, state, done
     
     def reset(self):
         restartState = np.array([self.spot / self.strike, self.maturity, self.initPosition])
