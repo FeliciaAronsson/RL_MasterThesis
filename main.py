@@ -26,13 +26,13 @@ env = HedgingEnv(100, 100, 21*3/250, 0.2, 0.05, 1/250, 0.01, 1.5, 0, 0)
 
 
 from collections import deque
-from models.actor import DDPGAgent
-from models.actor import soft_update
+from models.agent import DDPGAgent
+from models.agent import soft_update
 import torch
 import torch.nn as nn
-from models.actor import ReplayBuffer
+from models.buffer import ReplayBuffer
 max_episodes = 50
-max_steps = 21*3 / 250   # maturity/dT
+max_steps = int(21*3 / 250)   # maturity/dT
 gamma = 0.9995
 tau = 5e-4
 obs_dim = 64
@@ -44,11 +44,11 @@ batch_size = 256
 score_window = deque(maxlen=200)
 stop_avg_reward = -40
 
-actor, critic, target_actor, target_critic, actor_opt, critic_opt = DDPGAgent(obs_dim, act_dim)
+agent = DDPGAgent(obs_dim, act_dim, tau, gamma)
 
 for episode in range(max_episodes):
 
-    state, _ = env.reset()
+    state = env.reset()
     episode_reward = 0.0
 
     for step in range(max_steps):
@@ -57,7 +57,7 @@ for episode in range(max_episodes):
 
         # --- ACT ---
         with torch.no_grad():
-            action = actor(state_tensor).cpu().numpy()[0]
+            action = agent.actor(state_tensor).cpu().numpy()[0]
 
         action += np.random.normal(0, 0.1, size=act_dim)  # exploration noise
         next_state, reward, terminated, truncated, _ = env.step(action)
@@ -76,26 +76,26 @@ for episode in range(max_episodes):
 
             # ---- Critic update ----
             with torch.no_grad():
-                a_next = target_actor(s_next)
-                q_target = r + gamma * (1 - d) * target_critic(s_next, a_next)
+                a_next = agent.target_actor(s_next)
+                q_target = r + gamma * (1 - d) * agent.target_critic(s_next, a_next)
 
-            q_current = critic(s, a)
+            q_current = agent.critic(s, a)
             critic_loss = nn.MSELoss()(q_current, q_target)
 
-            critic_opt.zero_grad()
+            agent.critic_opt.zero_grad()
             critic_loss.backward()
-            critic_opt.step()
+            agent.critic_opt.step()
 
             # ---- Actor update ----
-            actor_loss = -critic(s, actor(s)).mean()
+            actor_loss = -agent.critic(s, agent.actor(s)).mean()
 
-            actor_opt.zero_grad()
+            agent.actor_opt.zero_grad()
             actor_loss.backward()
-            actor_opt.step()
+            agent.actor_opt.step()
 
             # ---- Target update ----
-            soft_update(target_actor, actor, tau)
-            soft_update(target_critic, critic, tau)
+            soft_update(agent.target_actor, agent.actor, tau)
+            soft_update(agent.target_critic, agent.critic, tau)
 
         if done:
             break
