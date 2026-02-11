@@ -71,10 +71,13 @@ for episode in range(episodes):
 
     def policy_BSM(S, K, r, T, sigma):
         return bs_delta(S, K, r, T, sigma)
+    
+    def policy_RL(state):
+        return agent.select(state)
 
     n_trails = 50
     n_steps = int(maturity / dT)
-    cost_bsm = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+    #cost_bsm = compute_cost(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
 
 
-    print(cost_bsm)
+    #print(cost_bsm)
