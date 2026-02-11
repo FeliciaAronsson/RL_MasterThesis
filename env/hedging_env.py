@@ -2,7 +2,7 @@ import numpy as np
 from utils.bs import bs_price
 
 class HedgingEnv:
-    def __init__(self, spot, strike, maturity, vol, mu, dT, kappa, c, initPosition, r):
+    def __init__(self, spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r):
         self.spot = spot
         self.strike = strike
         self.maturity = maturity
@@ -11,14 +11,12 @@ class HedgingEnv:
         self.dT = dT
         self.kappa = kappa
         self.c = c
-        self.initPosition = initPosition
+        self.initPosition = init_position
         self.rate = r
-        
 
     def step(self, action):
         ttm_prev = self.maturity
         pos_prev = self.initPosition
-
         spot_prev = self.spot
 
         # GBM
@@ -33,16 +31,14 @@ class HedgingEnv:
                        + bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
                        - bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
         
-
-        
         if done: 
             step_reward -= action * spot_next * self.kappa
         
         reward = step_reward - self.c * step_reward**2
 
-        state = np.array([spot_next / self.strike, ttm_next, action])
-        return reward, state
+        state_next = np.array([spot_next / self.strike, ttm_next, action])
+        return reward, state_next, done
     
     def reset(self):
-        restartState = np.array([self.spot / self.strike, self.maturity, self.initPosition])
-        return restartState
+        state_initial = np.array([self.spot / self.strike, self.maturity, self.initPosition])
+        return state_initial
