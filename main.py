@@ -4,6 +4,7 @@ from utils.bs import bs_delta
 import numpy as np
 from models.ddpg_agent import DDPGAgent
 from collections import deque
+from utils.compute_cost import compute_cost
 
 np.random.seed(0)
 
@@ -65,5 +66,15 @@ for episode in range(episodes):
         break
 
     # Policy
-    policy_rl = lambda state: agent.select(state)
-    policy_bsm = lambda state: bs_delta(state[0]*spot, strike, r, max(state[1],1e-8), np.sqrt(vol))
+    #policy_rl = lambda state: agent.select(state)
+    #policy_bsm = lambda action: bs_delta(state[0]*spot, strike, r, max(state[1],1e-8), np.sqrt(vol))
+
+    def policy_BSM(S, K, r, T, sigma):
+        return bs_delta(S, K, r, T, sigma)
+
+    n_trails = 50
+    n_steps = int(maturity / dT)
+    cost_bsm = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+
+
+    print(cost_bsm)

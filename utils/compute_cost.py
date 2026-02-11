@@ -1,45 +1,49 @@
 import numpy as np
 from utils.bs import bs_price
 
-class ComputeCost:
-    def __init__(self, policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vol, init_pos, dT, mu, kappa):
-        self.policy = policy
-        self.n_trails = n_trails
-        self.n_steps = n_steps
-        self.spot = spot
-        self.strike = strike
-        self.maturity = maturity
-        self.rate = rate
-        self.exp_vol = exp_vol 
-        self.init_pos = init_pos
-        self.dT = dT
-        self.mu = mu
-        self.kappa = kappa
+def gbm():
+    pass
 
-    def compute_cost(self, action):
-        ttm_prev = self.maturity
-        pos_prev = self.init_pos
-        spot_prev = self.spot
+def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vol, init_pos, dT, mu, kappa):
 
-        # GBM
-        spot_next = spot_prev * ((1 + self.mu * self.dT) + (np.random.randn() * self.vol) * np.sqrt(self.dT))
-        ttm_next = max(0, self.maturity - self.dT)
+    # Simulera
+    sim_paths = np.zeros((n_steps + 1, n_trails))
+    sim_times = np.linspace(0, maturity, n_steps + 1)
 
-        done = ttm_next < 1e-8
+    sim_paths[0, :] = spot
 
+    # GBM
+    for t in range(n_steps):
+        Z = np.random.randn(n_trails)
+        sim_paths[t+1,:] = sim_paths[t,:] * np.exp((mu - 0.5 * exp_vol**2) 
+                                                                 * dT + exp_vol* np.sqrt(dT) * Z)
+
+    rew = np.zeros((n_steps, n_trails))
+
+    pos_prev = init_pos * np.ones(n_trails)
+    #pos_next = policy(sim_paths[0, :] / strike, maturity * np.ones(n_trails), pos_prev)
+    pos_next = policy(spot, strike, rate, maturity, exp_vol)
+
+    # Hedging loop 
+    for timeidx in range(1, n_steps + 1):
+
+        T_prev = maturity - sim_times[timeidx - 1]
+        T_next = np.maximum(0, maturity - sim_times[timeidx])
+
+        rew[timeidx - 1, :] = ((sim_paths[timeidx, :] - sim_paths[timeidx - 1, :]) * pos_next
+                    - np.abs(pos_next - pos_prev) * sim_paths[timeidx,:] * kappa
+                    + bs_price(sim_paths[timeidx, :], strike, rate, T_next, exp_vol) 
+                    - bs_price(sim_paths[timeidx - 1, :], strike, rate, T_prev, exp_vol))
         
-        # Reward P&L
-        step_reward = ((spot_next - spot_prev) * action 
-                       - abs((action - pos_prev) * spot_next) * self.kappa 
-                       + bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
-                       - bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
-        
-        if done: 
-            step_reward -= action * spot_next * self.kappa
-        
-        reward = step_reward - self.c * step_reward**2
+        if timeidx == n_steps: 
+            rew[timeidx - 1, :] -= pos_next * sim_paths[timeidx, :] * kappa
+        else:
+            pos_prev = pos_next
+            
 
-        state_next = np.array([spot_next / self.strike, ttm_next, action])
-        return reward, state_next, done
+            pos_next = policy(spot, strike, rate, maturity, exp_vol)
+            #pos_next = policy(sim_paths[timeidx,:] / strike, T_next, pos_prev)
+            
+        perCost = np.sum(rew, axis = 0)
 
-        pass
+    return perCost
