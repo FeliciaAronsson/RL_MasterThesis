@@ -23,10 +23,10 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
     pos_prev = init_pos * np.ones(n_trails)
 
     #BSM
-    #pos_next = policy(spot, strike, rate, maturity, exp_vol)
+    pos_next = policy(spot, strike, rate, maturity, exp_vol)
 
     #RL
-    pos_next = policy(np.array([sim_paths[0,:]/strike, maturity * np.ones(n_trails), pos_prev]))
+    #pos_next = policy(np.array([sim_paths[0,:]/strike, maturity * np.ones(n_trails), pos_prev]))
 
     # Hedging loop 
     for timeidx in range(1, n_steps):
@@ -43,9 +43,9 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
             rew[timeidx - 1, :] -= pos_next * sim_paths[timeidx, :] * kappa
         else:
             pos_prev = pos_next
-            pos_next = policy(np.array([sim_paths[timeidx,:]/strike, T_prev, pos_prev]))
+            #pos_next = policy(np.array([sim_paths[timeidx,:]/strike, T_prev, pos_prev]))
 
-            #pos_next = policy(sim_paths[timeidx,:], strike, rate, T_prev, exp_vol)
+            pos_next = policy(sim_paths[timeidx,:], strike, rate, T_prev, exp_vol)
             
         perCost = np.sum(rew, axis = 0)
 

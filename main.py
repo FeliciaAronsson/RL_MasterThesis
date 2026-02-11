@@ -1,6 +1,7 @@
 from env.hedging_env import HedgingEnv
 import numpy as np
 from utils.bs import bs_delta
+from utils.bs import bs_price
 import numpy as np
 from models.ddpg_agent import DDPGAgent
 from collections import deque
@@ -69,6 +70,8 @@ for episode in range(episodes):
     #policy_rl = lambda state: agent.select(state)
     #policy_bsm = lambda action: bs_delta(state[0]*spot, strike, r, max(state[1],1e-8), np.sqrt(vol))
 
+
+
     def policy_BSM(S, K, r, T, sigma):
         return bs_delta(S, K, r, T, sigma)
     
@@ -77,7 +80,13 @@ for episode in range(episodes):
 
     n_trails = 50
     n_steps = int(maturity / dT)
-    #cost_bsm = compute_cost(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+    #cost_bsm = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
 
+
+    S_test = np.array([90, 100, 110])
+    T_test = np.array([0.5, -1, 0.0])
+
+    print(bs_price(S_test, 100, 0.01, T_test, 0.2))
+    print(bs_delta(S_test, 100, 0.01, T_test, 0.2))
 
     #print(cost_bsm)

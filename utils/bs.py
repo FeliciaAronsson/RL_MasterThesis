@@ -5,7 +5,6 @@ def bs_price(S, K, r, T, sigma):
     S = np.asarray(S, dtype=float)
     T = np.asarray(T, dtype=float)
 
-
     if np.all(T == 0):
         return max(S - K, 0.0)
     d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
@@ -15,7 +14,8 @@ def bs_price(S, K, r, T, sigma):
 def bs_delta(S, K, r, T, sigma):
     S = np.asarray(S, dtype=float)
     T = np.asarray(T, dtype=float)
-    if T <= 0:
+
+    if np.all(T == 0):
         return 1.0 if S > K else 0.0
     d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
     return norm.cdf(d1)
