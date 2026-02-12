@@ -5,9 +5,10 @@ from utils.bs import bs_price
 import numpy as np
 from models.ddpg_agent import DDPGAgent
 from collections import deque
-from utils.compute_cost import compute_cost_rl
-from utils.compute_cost import compute_cost_bsm
+from utils.compute_cost import compute_cost
 import torch
+import pandas as pd
+import matplotlib.pyplot as plt
 
 np.random.seed(3)
 
@@ -72,15 +73,9 @@ for episode in range(episodes):
     #policy_rl = lambda state: agent.select(state)
     #policy_bsm = lambda action: bs_delta(state[0]*spot, strike, r, max(state[1],1e-8), np.sqrt(vol))
 
-
-
-def policy_BSM(S, K, r, T, sigma):
-    return bs_delta(S, K, r, T, sigma)
-
-# def policy_RL(state):
-    
-#     return agent.select(state)
-
+def policy_BSM(mR, TTM, Pos):
+    S = mR * strike
+    return bs_delta(S, strike, r, TTM, vol)
 
 
 def policy_RL(mR, TTM, Pos):
@@ -89,11 +84,7 @@ def policy_RL(mR, TTM, Pos):
     TTM  : shape (nTrials,)
     Pos  : shape (nTrials,)
     """
-
-    # Build state matrix: shape (nTrials, 3)
     state = np.stack([mR, TTM, Pos], axis=1)
-
-    # Convert to torch
     state_tensor = torch.tensor(state, dtype=torch.float32)
 
     with torch.no_grad():
@@ -103,17 +94,16 @@ def policy_RL(mR, TTM, Pos):
 
 n_trails = 1000
 n_steps = int(maturity / dT)
-Costs_BSM = compute_cost_bsm(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-Costs_RL = compute_cost_rl(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+
+Costs_BSM = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+Costs_RL = compute_cost(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
 
 
-S_test = np.array([90, 100, 110])
-T_test = np.array([0.5, 0.1, 0.0])
+# S_test = np.array([90, 100, 110])
+# T_test = np.array([0.5, 0.1, 0.0])
 
-print(bs_price(S_test, 100, 0.01, T_test, 0.2))
-print(bs_delta(S_test, 100, 0.01, T_test, 0.2))
-
-import pandas as pd
+# print(bs_price(S_test, 100, 0.01, T_test, 0.2))
+# print(bs_delta(S_test, 100, 0.01, T_test, 0.2))
 
 OptionPrice = bs_price(spot,strike,r,maturity,vol)
 
@@ -136,12 +126,6 @@ HedgeComp = pd.DataFrame(
 )
 
 print(HedgeComp)
-
-
-
-
-import matplotlib.pyplot as plt
-import numpy as np
 
 num_bins = 10
 
