@@ -5,7 +5,9 @@ from utils.bs import bs_price
 import numpy as np
 from models.ddpg_agent import DDPGAgent
 from collections import deque
-from utils.compute_cost import compute_cost
+from utils.compute_cost import compute_cost_rl
+from utils.compute_cost import compute_cost_bsm
+import torch
 
 np.random.seed(0)
 
@@ -28,7 +30,7 @@ tau = 0.1
 gamma = 0.001
 learnRate = 0.0001
 
-episodes = 100
+episodes = 5000
 batch_size = 64
 max_steps = int(21*30/250)
 
@@ -60,7 +62,7 @@ for episode in range(episodes):
     score_window.append(episode_reward)
     avg_reward = np.mean(score_window)
 
-    print(f"Episode {episode}, Reward {episode_reward:.2f}, Avg {avg_reward:.2f}")
+    #print(f"Episode {episode}, Reward {episode_reward:.2f}, Avg {avg_reward:.2f}")
 
     if avg_reward > stop_avg_reward and len(score_window) == score_window.maxlen:
         print("Stopping: Average reward threshold reached")
@@ -72,21 +74,85 @@ for episode in range(episodes):
 
 
 
-    def policy_BSM(S, K, r, T, sigma):
-        return bs_delta(S, K, r, T, sigma)
+def policy_BSM(S, K, r, T, sigma):
+    return bs_delta(S, K, r, T, sigma)
+
+# def policy_RL(state):
     
-    def policy_RL(state):
-        return agent.select(state)
-
-    n_trails = 50
-    n_steps = int(maturity / dT)
-    #cost_bsm = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+#     return agent.select(state)
 
 
-    S_test = np.array([90, 100, 110])
-    T_test = np.array([0.5, -1, 0.0])
 
-    print(bs_price(S_test, 100, 0.01, T_test, 0.2))
-    print(bs_delta(S_test, 100, 0.01, T_test, 0.2))
+def policy_RL(mR, TTM, Pos):
+    """P
+    mR   : shape (nTrials,)
+    TTM  : shape (nTrials,)
+    Pos  : shape (nTrials,)
+    """
 
-    #print(cost_bsm)
+    # Build state matrix: shape (nTrials, 3)
+    state = np.stack([mR, TTM, Pos], axis=1)
+
+    # Convert to torch
+    state_tensor = torch.tensor(state, dtype=torch.float32)
+
+    with torch.no_grad():
+        action = agent.actor(state_tensor).cpu().numpy()
+
+    return action.squeeze()
+
+n_trails = 1000
+n_steps = int(maturity / dT)
+Costs_BSM = compute_cost_bsm(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+Costs_RL = compute_cost_rl(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+
+
+# S_test = np.array([90, 100, 110])
+# T_test = np.array([0.5, 0.1, 0.0])
+
+# print(bs_price(S_test, 100, 0.01, T_test, 0.2))
+# print(bs_delta(S_test, 100, 0.01, T_test, 0.2))
+
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+num_bins = 10
+
+plt.figure()
+
+plt.hist(-Costs_RL, bins=num_bins, color='red', alpha=0.5, label='RL Hedge')
+plt.hist(-Costs_BSM, bins=num_bins, color='blue', alpha=0.5, label='Theoretical BLS Delta')
+
+plt.xlabel('Hedging Costs')
+plt.ylabel('Number of Trials')
+plt.title('RL Hedge Costs vs. BLS Hedge Costs')
+plt.legend(loc='best')
+
+plt.show()
+
+
+import pandas as pd
+
+OptionPrice = bs_price(spot,strike,r,maturity,vol)
+
+HedgeComp = pd.DataFrame(
+    {
+        "BSM": 100 * np.array([
+            -np.mean(Costs_BSM),
+            np.std(Costs_BSM)
+        ]) / OptionPrice,
+
+        "RL": 100 * np.array([
+            -np.mean(Costs_RL),
+            np.std(Costs_RL)
+        ]) / OptionPrice
+    },
+    index=[
+        "Average Hedge Cost (% of Option Price)",
+        "STD Hedge Cost (% of Option Price)"
+    ]
+)
+
+print(HedgeComp)
