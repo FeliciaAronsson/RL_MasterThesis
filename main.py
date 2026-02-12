@@ -67,11 +67,28 @@ for episode in range(episodes):
         print("Stopping: Average reward threshold reached")
         break
 
+
+    
+    # Policy
+    #policy_rl = lambda state: agent.select(state)
+    #policy_bsm = lambda action: bs_delta(state[0]*spot, strike, r, max(state[1],1e-8), np.sqrt(vol))
+
+
+    def policy_BSM(S, K, r, T, sigma):
+        return bs_delta(S, K, r, T, sigma)
+
+    n_trails = 50
+    n_steps = int(maturity / dT)
+    cost_bsm = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, rf_rate, vol, init_position, dT, mu, kappa)
+
+
+    print(cost_bsm)
+
     # Policy
     #policy_rl = lambda state: agent.select(state[0])
-    policy_bsm = lambda state: bs_delta(state[0]*spot, strike, rf_rate, max(state[1],1e-8), np.sqrt(vol))
+    #policy_bsm = lambda state: bs_delta(state[0]*spot, strike, rf_rate, max(state[1],1e-8), np.sqrt(vol))
 
-    #policy_bsm = policy_BSM(state[0]*spot, strike, rf_rate, max(state[1],1e-8), np.sqrt(vol))
+    #policy_bsm = policy_BSM(state[0]*spot, strike, rf_rate, state[1], vol)
     #print(type(policy_bsm))
 
     #policy_bsm = policy_BSM(
@@ -85,7 +102,9 @@ for episode in range(episodes):
     #print(type(policy_bsm))
     # Validate agent 
 
-    n_trial = 50 
-    n_step = 10
-    Costs_BSM = compute_cost(policy_bsm, n_trial, n_step, spot, strike, maturity, rf_rate, vol, init_position, dT, mu, kappa)
+    #n_trial = 50 
+    
+    #Costs_BSM = compute_cost(policy_bsm, n_trial, n_step, spot, strike, maturity, rf_rate, vol, init_position, dT, mu, kappa)
     #Costs_RL = compute_cost(policy_rl, n_trial, n_step, spot, strike, maturity, rf_rate, vol, init_position, dT, mu, kappa)
+
+    print("-----------------------------------------------")

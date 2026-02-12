@@ -8,3 +8,7 @@ def policy_BSM(mR, ttm, pos, rfRate, exp_vol):
     T = np.maximum(ttm, eps)
     return bs_delta(mR, K, rfRate, T, exp_vol)
 
+def policy_BSM2(mR, TTM, pos):
+    S = mR * strike
+    return bs_delta(S, strike, rfRate, TTM, vol)
+
