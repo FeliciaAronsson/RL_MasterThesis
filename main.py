@@ -9,7 +9,7 @@ from utils.compute_cost import compute_cost_rl
 from utils.compute_cost import compute_cost_bsm
 import torch
 
-np.random.seed(0)
+np.random.seed(3)
 
 # Settings
 spot = 100
@@ -18,17 +18,17 @@ maturity = 21*3/250
 vol = 0.2
 mu = 0.05
 dT = 1/250
-kappa = 0
-c = 0
+kappa = 0.01
+c = 1.5
 init_position = 0
 r = 0
 
 state_dim = 3
 action_dim = 1
 hidden_dim = 64
-tau = 0.1
-gamma = 0.001
-learnRate = 0.0001
+tau = 5e-4
+gamma = 0.9995
+learnRate = 1e-4
 
 episodes = 5000
 batch_size = 64
@@ -107,31 +107,11 @@ Costs_BSM = compute_cost_bsm(policy_BSM, n_trails, n_steps, spot, strike, maturi
 Costs_RL = compute_cost_rl(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
 
 
-# S_test = np.array([90, 100, 110])
-# T_test = np.array([0.5, 0.1, 0.0])
+S_test = np.array([90, 100, 110])
+T_test = np.array([0.5, 0.1, 0.0])
 
-# print(bs_price(S_test, 100, 0.01, T_test, 0.2))
-# print(bs_delta(S_test, 100, 0.01, T_test, 0.2))
-
-
-
-import matplotlib.pyplot as plt
-import numpy as np
-
-num_bins = 10
-
-plt.figure()
-
-plt.hist(-Costs_RL, bins=num_bins, color='red', alpha=0.5, label='RL Hedge')
-plt.hist(-Costs_BSM, bins=num_bins, color='blue', alpha=0.5, label='Theoretical BLS Delta')
-
-plt.xlabel('Hedging Costs')
-plt.ylabel('Number of Trials')
-plt.title('RL Hedge Costs vs. BLS Hedge Costs')
-plt.legend(loc='best')
-
-plt.show()
-
+print(bs_price(S_test, 100, 0.01, T_test, 0.2))
+print(bs_delta(S_test, 100, 0.01, T_test, 0.2))
 
 import pandas as pd
 
@@ -156,3 +136,24 @@ HedgeComp = pd.DataFrame(
 )
 
 print(HedgeComp)
+
+
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+num_bins = 10
+
+plt.figure()
+
+plt.hist(-Costs_RL, bins=num_bins, color='red', alpha=0.5, label='RL Hedge')
+plt.hist(-Costs_BSM, bins=num_bins, color='blue', alpha=0.5, label='Theoretical BLS Delta')
+
+plt.xlabel('Hedging Costs')
+plt.ylabel('Number of Trials')
+plt.title('RL Hedge Costs vs. BLS Hedge Costs')
+plt.legend(loc='best')
+
+plt.show()
+
