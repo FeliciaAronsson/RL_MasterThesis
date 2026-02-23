@@ -1,16 +1,18 @@
-from env.hedging_env import HedgingEnv
-import numpy as np
-from utils.bs import bs_delta
-from utils.bs import bs_price
-import numpy as np
-from models.ddpg_agent import DDPGAgent
-from collections import deque
-from utils.compute_cost import compute_cost
-import torch
-import pandas as pd
-import matplotlib.pyplot as plt
 
-np.random.seed(3)
+import numpy as np
+from collections import deque
+import torch 
+
+
+from env.hedging_env import HedgingEnv
+from models.ddpg_agent import DDPGAgent
+from utils.bs import bs_delta, bs_price
+from utils.compute_cost import compute_cost
+#from utils.policy import policy_BSM, policy_RL
+from train.train import train_RL
+from utils.print import plot_learningcurve, plot_histogram, print_hedge_table
+
+np.random.seed(0)
 
 # Settings
 spot = 100
@@ -24,66 +26,62 @@ c = 1.5
 init_position = 0
 r = 0
 
-state_dim = 3
-action_dim = 1
-hidden_dim = 64
+# Hyperparameters
 tau = 5e-4
 gamma = 0.9995
 learnRate = 1e-4
 
-episodes = 5000
+# Neural Network settings
+state_dim = 3
+action_dim = 1
+hidden_dim = 64
 batch_size = 64
-max_steps = int(21*30/250)
 
+# Define enviroment and agent
 env = HedgingEnv(spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r)
 agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
 
+# Stopping criterion
 score_window = deque(maxlen=200)
 stop_avg_reward = -40
 
+# Variables to add noice (increase exploration)
+noise_scale = 0.2
+noise_decay = 0.9995
+min_noise = 0.01
+
 # Training
-for episode in range(episodes):
-    state = env.reset()
-    episode_reward = 0
-    
-    for step in range(max_steps):
-        action = agent.select(state)
-        reward, next_state, done = env.step(action)
-        agent.buffer.add(state, action, reward, next_state, done)
-    
-        agent.train(batch_size)
-        
-        state = next_state
-        episode_reward += reward
-        
-        if done:
-            break
+episodes = 5000
+episode_rewards = train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
 
-    # Logging & stopping 
-    score_window.append(episode_reward)
-    avg_reward = np.mean(score_window)
 
-    #print(f"Episode {episode}, Reward {episode_reward:.2f}, Avg {avg_reward:.2f}")
-
-    if avg_reward > stop_avg_reward and len(score_window) == score_window.maxlen:
-        print("Stopping: Average reward threshold reached")
-        break
-
-    # Policy
-    #policy_rl = lambda state: agent.select(state)
-    #policy_bsm = lambda action: bs_delta(state[0]*spot, strike, r, max(state[1],1e-8), np.sqrt(vol))
+# Cost function
+n_trails = 1000
+n_steps = int(maturity / dT)
+mR = spot/strike
+Pos = init_position
 
 def policy_BSM(mR, TTM, Pos):
+    """
+    Docstring for policy_BSM
+    
+    :param mR: Description
+    :param TTM: Description
+    :param Pos: Description
+    """
     S = mR * strike
     return bs_delta(S, strike, r, TTM, vol)
 
 
 def policy_RL(mR, TTM, Pos):
-    """P
-    mR   : shape (nTrials,)
-    TTM  : shape (nTrials,)
-    Pos  : shape (nTrials,)
     """
+    Docstring for policy_RL
+    
+    :param mR: Description
+    :param TTM: Description
+    :param Pos: Description
+    """
+    
     state = np.stack([mR, TTM, Pos], axis=1)
     state_tensor = torch.tensor(state, dtype=torch.float32)
 
@@ -92,52 +90,13 @@ def policy_RL(mR, TTM, Pos):
 
     return action.squeeze()
 
-n_trails = 1000
-n_steps = int(maturity / dT)
 
 Costs_BSM = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
 Costs_RL = compute_cost(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-
-
-# S_test = np.array([90, 100, 110])
-# T_test = np.array([0.5, 0.1, 0.0])
-
-# print(bs_price(S_test, 100, 0.01, T_test, 0.2))
-# print(bs_delta(S_test, 100, 0.01, T_test, 0.2))
-
 OptionPrice = bs_price(spot,strike,r,maturity,vol)
 
-HedgeComp = pd.DataFrame(
-    {
-        "BSM": 100 * np.array([
-            -np.mean(Costs_BSM),
-            np.std(Costs_BSM)
-        ]) / OptionPrice,
 
-        "RL": 100 * np.array([
-            -np.mean(Costs_RL),
-            np.std(Costs_RL)
-        ]) / OptionPrice
-    },
-    index=[
-        "Average Hedge Cost (% of Option Price)",
-        "STD Hedge Cost (% of Option Price)"
-    ]
-)
-
-print(HedgeComp)
-
-num_bins = 10
-
-plt.figure()
-
-plt.hist(-Costs_RL, bins=num_bins, color='red', alpha=0.5, label='RL Hedge')
-plt.hist(-Costs_BSM, bins=num_bins, color='blue', alpha=0.5, label='Theoretical BLS Delta')
-
-plt.xlabel('Hedging Costs')
-plt.ylabel('Number of Trials')
-plt.title('RL Hedge Costs vs. BLS Hedge Costs')
-plt.legend(loc='best')
-
-plt.show()
-
+# Plot results
+print_hedge_table(Costs_BSM, Costs_RL, OptionPrice)
+plot_histogram(Costs_RL, Costs_BSM)
+plot_learningcurve(episode_rewards)

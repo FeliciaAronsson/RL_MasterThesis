@@ -6,7 +6,7 @@ class Actor(nn.Module):
         self.sequential = nn.Sequential(
             nn.Linear(state_dim, hidden), nn.ReLU(),
             nn.Linear(hidden, hidden), nn.ReLU(),
-            nn.Linear(hidden, action_dim), nn.Tanh())
+            nn.Linear(hidden, action_dim), nn.Sigmoid()) #Värden mellan 0 och 1 iatället för tanh, -1, 1
 
 
     def forward(self, state):

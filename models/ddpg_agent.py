@@ -4,6 +4,7 @@ import torch.optim as optim
 from models.actor import Actor
 from models.critic import Critic
 from utils.replay_buffer import ReplayBuffer
+import numpy as np
 
 class DDPGAgent:
     def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate):
@@ -26,10 +27,18 @@ class DDPGAgent:
 
         self.buffer = ReplayBuffer()
 
-    # Policy (chose an action a given a state s)
-    def select(self, s):
+    def select(self, s, noice_scale):
         with torch.no_grad():
-            return self.actor(torch.tensor(s).float().unsqueeze(0)).item()
+            action = self.actor(torch.tensor(s).float().unsqueeze(0)).item()
+
+            # Brus
+            if noice_scale > 0.0:
+                action += np.random.normal(0, noice_scale)
+        
+            # Ser till att action är mellan 0 och 1. 
+            return np.clip(action, 0.0, 1.0)
+
+
 
     def train(self, batch=64):
         if len(self.buffer.buffer) < batch:
