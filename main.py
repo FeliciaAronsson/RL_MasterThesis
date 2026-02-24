@@ -6,6 +6,7 @@ import torch
 
 from env.hedging_env import HedgingEnv
 from models.ddpg_agent import DDPGAgent
+from utils.policy import Policy
 from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
 #from utils.policy import policy_BSM, policy_RL
@@ -13,6 +14,7 @@ from train.train import train_RL
 from utils.print import plot_learningcurve, plot_histogram, print_hedge_table
 
 np.random.seed(0)
+
 
 # Settings
 spot = 100
@@ -58,8 +60,7 @@ episode_rewards = train_RL(episodes, env, agent, batch_size, min_noise, noise_sc
 # Cost function
 n_trails = 1000
 n_steps = int(maturity / dT)
-mR = spot/strike
-Pos = init_position
+
 
 def policy_BSM(mR, TTM, Pos):
     """
