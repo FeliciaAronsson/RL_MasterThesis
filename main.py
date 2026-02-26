@@ -45,15 +45,15 @@ agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
 
 # Stopping criterion
 score_window = deque(maxlen=200)
-stop_avg_reward = -40
+stop_avg_reward = 10
 
 # Variables to add noice (increase exploration)
 noise_scale = 0.2
-noise_decay = 0.9995
+noise_decay =  0.9995
 min_noise = 0.01
 
 # Training
-episodes = 5000
+episodes = 1250
 episode_rewards = train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
 
 
