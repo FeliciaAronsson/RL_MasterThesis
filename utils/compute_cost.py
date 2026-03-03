@@ -40,7 +40,7 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
             - bs_price(sim_paths[timeidx, :], strike, rate, T_next, exp_vol) 
             + bs_price(sim_paths[timeidx - 1, :], strike, rate, T_prev, exp_vol))
         
-        if timeidx == n_steps + 1: 
+        if timeidx == n_steps: 
             # Avveckla hedgen
             rew[timeidx - 1, :] -= pos_next * sim_paths[timeidx, :] * kappa
         else:
