@@ -64,7 +64,7 @@ class TD3Agent:
         # Critic target
         with torch.no_grad():
 
-            noise = (torch.rand_like(a) * self.policy_noise).clamp(-self.noise_clip, self.noise_clip)
+            noise = (torch.randn_like(a) * self.policy_noise).clamp(-self.noise_clip, self.noise_clip)
             target_a = (self.actor_target(s2) + noise).clamp(0,1)
 
             #Bellman
