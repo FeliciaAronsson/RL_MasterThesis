@@ -42,14 +42,13 @@ def plot_histogram(Cost_RL, Cost_BSM):
 def plot_learningcurve(all_episode_rewards):
     plt.figure(figsize=(10, 5))
 
-    # Raw rewards (lite genomskinliga så de inte tar över)
+    # Raw rewards
     plt.plot(all_episode_rewards, label='Episode Reward', alpha=0.3, color='blue')
 
-    # Calculate the rolling men over 100 episodes to visualize trends
+    # Calculate the rolling over 100 episode, to visualize trends
     rolling_mean = pd.Series(all_episode_rewards).rolling(window=100).mean()
     plt.plot(rolling_mean, label='Moving Average (100 episodes)', color='red', linewidth=2)
 
-    # Formatering av grafen
     plt.xlabel('Episode')
     plt.ylabel('Total Reward')
     plt.title('DDPG Agent Learning Curve')

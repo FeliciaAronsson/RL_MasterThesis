@@ -40,8 +40,8 @@ batch_size = 64
 
 # Define enviroment and agent
 env = HedgingEnv(spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r)
-#agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
-agent = TD3Agent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
+agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
+#agent = TD3Agent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
 
 # Stopping criterion
 score_window = deque(maxlen=200)

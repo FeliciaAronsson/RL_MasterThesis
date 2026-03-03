@@ -27,17 +27,15 @@ class DDPGAgent:
 
         self.buffer = ReplayBuffer()
 
-    def select(self, s, noice_scale):
+    def select(self, s, noise_scale):
         with torch.no_grad():
             action = self.actor(torch.tensor(s).float().unsqueeze(0)).item()
 
-            # Brus
-            if noice_scale > 0.0:
-                action += np.random.normal(0, noice_scale)
-        
-            # Ser till att action är mellan 0 och 1. 
-            return np.clip(action, 0.0, 1.0)
+            # Noise
+            if noise_scale > 0.0:
+                action += np.random.normal(0, noise_scale)
 
+            return np.clip(action, 0.0, 1.0)
 
 
     def train(self, batch=64):
@@ -54,7 +52,7 @@ class DDPGAgent:
         # Critic target
         with torch.no_grad():
             target_a = self.actor_target(s2)
-            #Bellman
+            # Bellman
             target_q = r + self.gamma * (1 - d) * self.critic_target(s2, target_a)
 
         # Critic update

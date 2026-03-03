@@ -37,13 +37,13 @@ class TD3Agent:
         self.buffer = ReplayBuffer()
 
 
-    def select(self, s, noice_scale):
+    def select(self, s, noise_scale):
         with torch.no_grad():
             action = self.actor(torch.tensor(s).float().unsqueeze(0)).item()
 
-            # Brus
-            if noice_scale > 0.0:
-                action += np.random.normal(0, noice_scale)
+            # Noise
+            if noise_scale > 0.0:
+                action += np.random.normal(0, noise_scale)
         
             return np.clip(action, 0.0, 1.0)
 

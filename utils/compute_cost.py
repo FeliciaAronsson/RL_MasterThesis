@@ -5,7 +5,7 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
 
     np.random.seed(0)
 
-    # Simulera
+    # Simulate
     sim_paths = np.zeros((n_steps + 1, n_trails))
     sim_times = np.linspace(0, maturity, n_steps + 1)
 
@@ -30,22 +30,17 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
         T_prev = maturity - sim_times[timeidx - 1]
         T_next = np.maximum(0, maturity - sim_times[timeidx])
 
-        # rew[timeidx - 1, :] = ((sim_paths[timeidx, :] - sim_paths[timeidx - 1, :]) * pos_next
-        #             - np.abs(pos_next - pos_prev) * sim_paths[timeidx,:] * kappa
-        #             + bs_price(sim_paths[timeidx, :], strike, rate, T_next, exp_vol) 
-        #             - bs_price(sim_paths[timeidx - 1, :], strike, rate, T_prev, exp_vol))
-
         rew[timeidx - 1, :] = ((sim_paths[timeidx, :] - sim_paths[timeidx - 1, :]) * pos_prev
             - np.abs(pos_next - pos_prev) * sim_paths[timeidx - 1,:] * kappa
             - bs_price(sim_paths[timeidx, :], strike, rate, T_next, exp_vol) 
             + bs_price(sim_paths[timeidx - 1, :], strike, rate, T_prev, exp_vol))
         
         if timeidx == n_steps: 
-            # Avveckla hedgen
+            # Final step (matuarity)
             rew[timeidx - 1, :] -= pos_next * sim_paths[timeidx, :] * kappa
         else:
             pos_prev = pos_next
-            pos_next = policy(sim_paths[timeidx,:]/strike, T_next, pos_prev) # t_next ist för t_prev
+            pos_next = policy(sim_paths[timeidx,:]/strike, T_next, pos_prev) 
             
     perCost = np.sum(rew, axis = 0)
 
