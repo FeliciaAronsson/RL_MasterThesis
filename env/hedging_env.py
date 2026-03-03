@@ -19,12 +19,10 @@ class HedgingEnv:
         :param r: Description
         """
  
-       #Värden som inte ska ändras
         self.start_spot = spot
         self.start_maturity = maturity
         self.start_position = init_position
 
-        # värden som ska ändras under step
         self.spot = spot
         self.strike = strike
         self.maturity = maturity
@@ -59,11 +57,6 @@ class HedgingEnv:
                         - abs((action - pos_prev) * spot_next) * self.kappa 
                         - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
                         + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
-
-        #step_reward = ((spot_next - spot_prev) * self.initPosition 
-         #       - abs((action - pos_prev) * spot_next) * self.kappa 
-          #      - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
-           #     + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
         
         if done: 
             step_reward -= action * spot_next * self.kappa
@@ -74,7 +67,7 @@ class HedgingEnv:
 
         state_next = np.array([spot_next / self.strike, ttm_next, action])
 
-        # Uppdatera miljöns state
+        # Update state 
         self.maturity = ttm_next
         self.initPosition = action
         self.spot = spot_next
