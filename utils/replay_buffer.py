@@ -30,4 +30,10 @@ class ReplayBuffer:
         :param batch: Batch size
         """
         samples = random.sample(self.buffer, batch)
-        return map(np.array, zip(*samples))
+        state, action, reward, next_state, done =  map(np.array, zip(*samples))
+        
+        return state, action, reward, next_state, done
+    
+
+    def __len__(self):
+        return len(self.buffer)

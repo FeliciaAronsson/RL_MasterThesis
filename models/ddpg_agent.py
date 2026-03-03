@@ -27,14 +27,14 @@ class DDPGAgent:
 
         self.buffer = ReplayBuffer()
 
-    def select(self, state, noice_scale):
+    def select(self, state, noise_scale):
         # no_grad - does not update the gradient when updating the weights in the neural network. 
         with torch.no_grad():
             action = self.actor(torch.tensor(state).float().unsqueeze(0)).item()
 
             # Add noice
-            if noice_scale > 0.0:
-                action += np.random.normal(0, noice_scale)
+            if noise_scale > 0.0:
+                action += np.random.normal(0, noise_scale)
         
             # clip make sure that the action is between 0 and 1
             return np.clip(action, 0.0, 1.0)

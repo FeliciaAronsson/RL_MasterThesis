@@ -12,6 +12,7 @@ from utils.compute_cost import compute_cost
 #from utils.policy import policy_BSM, policy_RL
 from train.train import train_RL
 from utils.print import plot_learningcurve, plot_histogram, print_hedge_table
+from models.dqn_agent import DQNAgent
 
 np.random.seed(0)
 
@@ -43,9 +44,14 @@ batch_size = 64
 env = HedgingEnv(spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r)
 agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
 
+#actions = np.linspace(0, 1, 11)
+#action_dimension = len(actions)
+
+#agent = DQNAgent(state_dim, action_dimension, hidden_dim, tau, gamma, learnRate)
+
 # Stopping criterion
 score_window = deque(maxlen=200)
-stop_avg_reward = -20
+stop_avg_reward = -2000
 
 # Variables to add noice (increase exploration)
 noise_scale = 0.2
@@ -55,7 +61,6 @@ min_noise = 0.01
 # Training
 episodes = 1250
 episode_rewards = train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
-
 
 # Cost function
 n_trails = 1000
@@ -99,5 +104,5 @@ OptionPrice = bs_price(spot,strike,r,maturity,vol)
 
 # Plot results
 print_hedge_table(Costs_BSM, Costs_RL, OptionPrice)
-plot_histogram(-Costs_RL, -Costs_BSM)
+plot_histogram(Costs_RL, Costs_BSM)
 plot_learningcurve(episode_rewards)
