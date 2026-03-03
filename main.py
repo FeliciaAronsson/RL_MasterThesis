@@ -51,7 +51,7 @@ noise_decay = 0.9995
 min_noise = 0.01
 
 # Training
-episodes = 5000
+episodes = 1250
 episode_rewards = train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
 
 

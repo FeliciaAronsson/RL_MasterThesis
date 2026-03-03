@@ -3,6 +3,22 @@ from utils.bs import bs_price
 
 class HedgingEnv:
     def __init__(self, spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r):
+        """
+        Docstring for __init__
+       
+        :param self: Description
+        :param spot: The current market price ogf the underlying asset
+        :param strike: The set price that an option can be excercised
+        :param maturity: Time remaining until the option can be excercised. Acts like a horizion for each episode.
+        :param vol: Expected volatility, the riskiness of the stock price. Higher vol makes hedging tasks much harder because the price mves more unpredictable
+        :param mu: Description
+        :param dT: Time step, the frequency of trading, how many steps that are in each episode
+        :param kappa: Risk Aversion parameter, "how much should the agent dislike variance"
+        :param c: Transaction cost, the cost of trading, a fee for every dollar of stoock thats been bought or sold.
+        :param init_position: Description
+        :param r: Description
+        """
+ 
        #Värden som inte ska ändras
         self.start_spot = spot
         self.start_maturity = maturity
