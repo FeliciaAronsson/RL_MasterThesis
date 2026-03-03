@@ -45,7 +45,7 @@ agent = TD3Agent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
 
 # Stopping criterion
 score_window = deque(maxlen=200)
-stop_avg_reward = -10
+stop_avg_reward = -40
 
 # Variables to add noice (increase exploration)
 noise_scale = 0.2

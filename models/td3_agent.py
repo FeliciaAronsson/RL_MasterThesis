@@ -7,9 +7,11 @@ import numpy as np
 import torch.nn.functional as F
 
 class TD3Agent:
-    def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate):
+    def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate, policy_delay = 2):
         self.tau = tau
         self.gamma = gamma
+        self.policy_delay = policy_delay
+        self.total_it = 0
 
         # Actor
         self.actor = Actor(obs_dim, act_dim, hidden_dim)
@@ -45,6 +47,8 @@ class TD3Agent:
 
 
     def train(self, batch=64):
+        self.total_it += 1
+
         if len(self.buffer.buffer) < batch:
             return
 
@@ -72,16 +76,19 @@ class TD3Agent:
         critic_loss.backward()
         self.opt_critic.step()
 
-        # Actor update
-        actor_loss = -self.critic1(s, self.actor(s)).mean() 
-        self.opt_actor.zero_grad()
-        actor_loss.backward()
-        self.opt_actor.step()
+        # Delayed policy updates 
+        if self.total_it % self.policy_delay == 0:
 
-        # Soft updates of target networks
-        for p, pt in zip(self.actor.parameters(), self.actor_target.parameters()):
-            pt.data.copy_(self.tau * p.data + (1 - self.tau) * pt.data)
-        for p, pt in zip(self.critic1.parameters(), self.critic_target1.parameters()):
-            pt.data.copy_(self.tau * p.data + (1 - self.tau) * pt.data)
-        for p, pt in zip(self.critic2.parameters(), self.critic_target2.parameters()):
-            pt.data.copy_(self.tau * p.data + (1 - self.tau) * pt.data)
+            # Actor update
+            actor_loss = -self.critic1(s, self.actor(s)).mean() 
+            self.opt_actor.zero_grad()
+            actor_loss.backward()
+            self.opt_actor.step()
+
+            # Soft updates of target networks
+            for p, pt in zip(self.actor.parameters(), self.actor_target.parameters()):
+                pt.data.copy_(self.tau * p.data + (1 - self.tau) * pt.data)
+            for p, pt in zip(self.critic1.parameters(), self.critic_target1.parameters()):
+                pt.data.copy_(self.tau * p.data + (1 - self.tau) * pt.data)
+            for p, pt in zip(self.critic2.parameters(), self.critic_target2.parameters()):
+                pt.data.copy_(self.tau * p.data + (1 - self.tau) * pt.data)
