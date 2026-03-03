@@ -2,7 +2,7 @@ import numpy as np
 
 def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward):
     """
-    Docstring for train
+    Training the enviroment
     
     :param episodes: Description
     :param env: Description
@@ -22,9 +22,9 @@ def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
         episode_reward = 0
         done = False
         
-        # Körs until time to maturity is reached
+        # Run until time to maturity is reached
         while not done:
-            # Skicka med bruset när vi väljer action
+            # Send noice when we choose action
             action = agent.select(state, noise_scale)
             reward, next_state, done = env.step(action)
             

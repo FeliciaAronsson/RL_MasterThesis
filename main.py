@@ -45,7 +45,7 @@ agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
 
 # Stopping criterion
 score_window = deque(maxlen=200)
-stop_avg_reward = 10
+stop_avg_reward = -20
 
 # Variables to add noice (increase exploration)
 noise_scale = 0.2
@@ -99,5 +99,5 @@ OptionPrice = bs_price(spot,strike,r,maturity,vol)
 
 # Plot results
 print_hedge_table(Costs_BSM, Costs_RL, OptionPrice)
-plot_histogram(Costs_RL, Costs_BSM)
+plot_histogram(-Costs_RL, -Costs_BSM)
 plot_learningcurve(episode_rewards)
