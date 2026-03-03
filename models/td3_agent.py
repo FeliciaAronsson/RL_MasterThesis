@@ -7,9 +7,12 @@ import numpy as np
 import torch.nn.functional as F
 
 class TD3Agent:
-    def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate, policy_delay = 2):
+    def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate, 
+                 policy_noise = 0.2, noise_clip = 0.5, policy_delay = 2):
         self.tau = tau
         self.gamma = gamma
+        self.policy_noise = policy_noise
+        self.noise_clip = noise_clip
         self.policy_delay = policy_delay
         self.total_it = 0
 
@@ -45,7 +48,6 @@ class TD3Agent:
             return np.clip(action, 0.0, 1.0)
 
 
-
     def train(self, batch=64):
         self.total_it += 1
 
@@ -61,10 +63,13 @@ class TD3Agent:
 
         # Critic target
         with torch.no_grad():
-            target_a = self.actor_target(s2)
+
+            noise = (torch.rand_like(a) * self.policy_noise).clamp(-self.noise_clip, self.noise_clip)
+            target_a = (self.actor_target(s2) + noise).clamp(0,1)
+
             #Bellman
-            target_q1 = r + self.gamma * (1 - d) * self.critic_target1(s2, target_a)
-            target_q2 = r + self.gamma * (1 - d) * self.critic_target2(s2, target_a)
+            target_q1 = self.critic_target1(s2, target_a)
+            target_q2 = self.critic_target2(s2, target_a)
             target_q = r + self.gamma * (1 - d) * torch.min(target_q1, target_q2)
 
         # Critic update
