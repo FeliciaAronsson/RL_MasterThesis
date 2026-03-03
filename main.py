@@ -6,6 +6,7 @@ import torch
 
 from env.hedging_env import HedgingEnv
 from models.ddpg_agent import DDPGAgent
+from models.td3_agent import TD3Agent
 from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
 #from utils.policy import policy_BSM, policy_RL
@@ -39,7 +40,8 @@ batch_size = 64
 
 # Define enviroment and agent
 env = HedgingEnv(spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r)
-agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
+#agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
+agent = TD3Agent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
 
 # Stopping criterion
 score_window = deque(maxlen=200)
