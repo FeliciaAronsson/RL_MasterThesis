@@ -27,7 +27,7 @@ class DDPGAgent:
 
         self.buffer = ReplayBuffer()
 
-    def select(self, s, noise_scale):
+    def select(self, state, noise_scale):
         with torch.no_grad():
             action = self.actor(torch.tensor(state).float().unsqueeze(0)).item()
 
