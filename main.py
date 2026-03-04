@@ -11,6 +11,7 @@ from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
 #from utils.policy import policy_BSM, policy_RL
 from train.train import train_RL
+from train.train_DQN import train_DQN
 from utils.print import plot_learningcurve, plot_histogram, print_hedge_table
 from models.dqn_agent import DQNAgent
 
@@ -40,27 +41,30 @@ action_dim = 1
 hidden_dim = 64
 batch_size = 64
 
+# To handle discrete actions for DQN 
+actions_list = np.linspace(0, 1, 11)
+action_dimension = len(actions_list)
+
 # Define enviroment and agent
 env = HedgingEnv(spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r)
-agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
+ddpg_agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
 
-#actions = np.linspace(0, 1, 11)
-#action_dimension = len(actions)
-
-#agent = DQNAgent(state_dim, action_dimension, hidden_dim, tau, gamma, learnRate)
+dqn_agent = DQNAgent(state_dim, action_dimension, hidden_dim, tau, gamma, learnRate)
 
 # Stopping criterion
 score_window = deque(maxlen=200)
-stop_avg_reward = -2000
+stop_avg_reward = 0
+episodes = 1000
 
 # Variables to add noice (increase exploration)
 noise_scale = 0.2
 noise_decay =  0.9995
 min_noise = 0.01
 
-# Training
-episodes = 1250
-episode_rewards = train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
+
+#episode_rewards = train_RL(episodes, env, ddpg_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
+
+episode_rewards = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window, stop_avg_reward)
 
 # Cost function
 n_trails = 1000
@@ -92,17 +96,32 @@ def policy_RL(mR, TTM, Pos):
     state_tensor = torch.tensor(state, dtype=torch.float32)
 
     with torch.no_grad():
-        action = agent.actor(state_tensor).cpu().numpy()
+        action = ddpg_agent.actor(state_tensor).cpu().numpy()
 
     return action.squeeze()
 
+def policy_DQN(mR, TTM, Pos):
+    state = np.stack([mR, TTM, Pos], axis=1)
+    state_tensor = torch.tensor(state, dtype=torch.float32)
 
-Costs_BSM = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-Costs_RL = compute_cost(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-OptionPrice = bs_price(spot,strike,r,maturity,vol)
+    with torch.no_grad():                        # Här är policyn argmax som ända skillnaden
+        action_index = dqn_agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
+
+    return actions_list[action_index]
+
+
+Cost_BSM = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+#Cost_RL = compute_cost(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+Cost_DQN = compute_cost(policy_DQN,  n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+
+OptionPrice = bs_price(spot, strike, r, maturity, vol)
 
 
 # Plot results
-print_hedge_table(Costs_BSM, Costs_RL, OptionPrice)
-plot_histogram(Costs_RL, Costs_BSM)
+#print_hedge_table(Cost_BSM, Cost_RL, OptionPrice)
+#plot_histogram(Cost_RL, Cost_BSM)
+#plot_learningcurve(episode_rewards)
+
+print_hedge_table(Cost_BSM, Cost_DQN, OptionPrice)
+plot_histogram(Cost_DQN, Cost_BSM)
 plot_learningcurve(episode_rewards)

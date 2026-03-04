@@ -59,11 +59,6 @@ class HedgingEnv:
                         - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
                         + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
 
-        #step_reward = ((spot_next - spot_prev) * self.initPosition 
-         #       - abs((action - pos_prev) * spot_next) * self.kappa 
-          #      - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
-           #     + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
-        
         if done: 
             step_reward -= action * spot_next * self.kappa
            

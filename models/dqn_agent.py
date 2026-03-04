@@ -17,36 +17,36 @@ class DQNAgent:
         self.epsilon_decay = epsilon_decay
         self.epsilon_min = epsilon_min
 
-        self.q = QNetwork(obs_dim, act_dim, hidden_dim)
-        self.q_target = QNetwork(obs_dim, act_dim, hidden_dim)
+        self.qnet = QNetwork(obs_dim, act_dim, hidden_dim)
+        self.qnet_target = QNetwork(obs_dim, act_dim, hidden_dim)
 
-        self.q_target.load_state_dict(self.q.state_dict())
-        self.opt = optim.Adam(self.q.parameters(), lr= learnRate)
+        self.qnet_target.load_state_dict(self.qnet.state_dict())
+        self.opt = optim.Adam(self.qnet.parameters(), lr= learnRate)
+
         
         self.buffer = ReplayBuffer()
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.q.to(self.device)
-        self.q_target.to(self.device)
 
    
-    def select(self, state, eps):
-        if np.random.rand() < eps: 
-            return np.random.randint(0, self.act_dim-1)
+    def select(self, state, train = True):
+
+        if train and np.random.random() < self.epsilon_start:
+            return np.random.randint(0, self.act_dim - 1)
         
-        state = torch.tensor(state).float().unsqueeze(0)
-        self.q.eval()
+  
+        #state = torch.tensor(state).float().unsqueeze(0)
+        #self.qnet.eval()
         
         with torch.no_grad():
-            action_values = self.q(state)
+            state_tensor = torch.tensor(state).float().unsqueeze(0)
+            q_values = self.qnet(state_tensor)
 
-        self.q.train()
-        return np.argmax(action_values.cpu().data.numpy)
-
+        #self.qnet.train()
+        return torch.argmax(q_values).item()
 
 
     def train(self, batch_size):
-
+            # len(self.buffer.buffer)?
         if len(self.buffer) < batch_size:
             return
         
@@ -59,11 +59,12 @@ class DQNAgent:
         next_state = torch.tensor(next_state).float()
         done = torch.tensor(done).float().unsqueeze(1)
 
+        with torch.no_grad():
 
-        q_target_next = self.q_target(next_state).detach().max(1)[0].unsqueeze(1)
-        q_targets = reward + (self.gamma * q_target_next * (1-done))
+            q_target_next = self.qnet_target(next_state).max(1)[0].unsqueeze(1)
+            q_targets = reward + (self.gamma * q_target_next * (1-done))
 
-        q_expected = self.q(state).gather(1, action)
+        q_expected = self.qnet(state).gather(1, action)
         
         loss = nn.MSELoss()(q_expected, q_targets)
         self.opt.zero_grad()
@@ -71,10 +72,10 @@ class DQNAgent:
         self.opt.step()
 
         #soft update 
-        for p, pt in zip(self.q.parameters(), self.q_target.parameters()):
+        for p, pt in zip(self.qnet.parameters(), self.qnet_target.parameters()):
             pt.data.copy_(self.tau * p.data + (1 - self.tau) * pt.data)
 
-            self.epsilon_start = max(self.epsilon_min, self.epsilon_start * self.epsilon_decay)
+        self.epsilon_start = max(self.epsilon_min, self.epsilon_start * self.epsilon_decay)
     
 
        
