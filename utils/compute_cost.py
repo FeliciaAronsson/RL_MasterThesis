@@ -14,9 +14,7 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
     # GBM
     for t in range(n_steps):
         Z = np.random.randn(n_trails)
-        sim_paths[t+1,:] = sim_paths[t,:] * np.exp((mu - 0.5 * exp_vol**2) 
-                                                                 * dT + exp_vol* np.sqrt(dT) * Z)
-
+        sim_paths[t+1,:] = sim_paths[t,:] * np.exp((mu - 0.5 * exp_vol**2) * dT + exp_vol * np.sqrt(dT) * Z)
     rew = np.zeros((n_steps, n_trails))
 
     pos_prev = init_pos * np.ones(n_trails)

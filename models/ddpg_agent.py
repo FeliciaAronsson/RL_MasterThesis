@@ -29,7 +29,7 @@ class DDPGAgent:
 
     def select(self, s, noise_scale):
         with torch.no_grad():
-            action = self.actor(torch.tensor(s).float().unsqueeze(0)).item()
+            action = self.actor(torch.tensor(state).float().unsqueeze(0)).item()
 
             # Noise
             if noise_scale > 0.0:
@@ -41,33 +41,33 @@ class DDPGAgent:
     def train(self, batch=64):
         if len(self.buffer.buffer) < batch:
             return
-
+ 
         s, a, r, s2, d = self.buffer.sample(batch)
         s = torch.tensor(s).float()
         a = torch.tensor(a).float().unsqueeze(1)
         r = torch.tensor(r).float().unsqueeze(1)
         s2 = torch.tensor(s2).float()
         d = torch.tensor(d).float().unsqueeze(1)
-
+ 
         # Critic target
         with torch.no_grad():
             target_a = self.actor_target(s2)
             # Bellman
             target_q = r + self.gamma * (1 - d) * self.critic_target(s2, target_a)
-
+ 
         # Critic update
         q = self.critic(s, a)
         critic_loss = ((q - target_q) ** 2).mean()
         self.opt_critic.zero_grad()
         critic_loss.backward()
         self.opt_critic.step()
-
+ 
         # Actor update
         actor_loss = -self.critic(s, self.actor(s)).mean()
         self.opt_actor.zero_grad()
         actor_loss.backward()
         self.opt_actor.step()
-
+ 
         # Soft updates of target networks
         for p, pt in zip(self.actor.parameters(), self.actor_target.parameters()):
             pt.data.copy_(self.tau * p.data + (1 - self.tau) * pt.data)

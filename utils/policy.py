@@ -4,38 +4,56 @@ from utils.bs import bs_delta
 import torch
 import numpy as np
 
+class Policy():
 
-def policy_BSM(mR, TTM, Pos, strike, r, vol):
-    """
-    Policy for Black Scholes hedging
+    def __init__(self, agent, dqn_agent, strike, vol, r):
+
+        self.strike = strike
+        self.vol = vol
+        self.rate = r
+        self.agent = agent
+        self.dqn_agent = dqn_agent
+
+
+    def policy_BSM(self, mR, TTM, Pos):
+        """
+        Policy for Black Scholes hedging
+        
+        :param mR: Spot/Strike
+        :param TTM: Time to maturity
+        :param Pos: Position 
+        :param strike: Strike Price
+        :param r: Risk free rate
+        :param vol: Expected volatility
+        """
+        
+        S = mR * self.strike
+        return bs_delta(S, self.strike, self.r, TTM, self.vol)
+
+
+    def policy_RL(self, mR, TTM, Pos): 
+        """
+        Policy for reinforcement learning hedging
+        
+        :param mR: Description
+        :param TTM: Time to maturity
+        :param Pos: Position
+        :param agent: Agent
+        """
+        
+        state = np.stack([mR, TTM, Pos], axis=1)
+        state_tensor = torch.tensor(state, dtype=torch.float32)
+
+        with torch.no_grad():
+            action = self.agent.actor(state_tensor).cpu().numpy()
+
+        return action.squeeze()
     
-    :param mR: Spot/Strike
-    :param TTM: Time to maturity
-    :param Pos: Position 
-    :param strike: Strike Price
-    :param r: Risk free rate
-    :param vol: Expected volatility
-    """
-     
-    S = mR * strike
-    return bs_delta(S, strike, r, TTM, vol)
+    def policy_DQN(self, mR, TTM, Pos):
+        state = np.stack([mR, TTM, Pos], axis=1)
+        state_tensor = torch.tensor(state, dtype=torch.float32)
 
+        with torch.no_grad():                        # Här är policyn argmax som ända skillnaden
+            action_index = dqn_agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
 
-def policy_RL(spot, strike, TTM, Pos, agent): 
-    """
-    Policy for reinforcement learning hedging
-    
-    :param mR: Description
-    :param TTM: Time to maturity
-    :param Pos: Position
-    :param agent: Agent
-    """
-    mR = spot/strike
-    
-    state = np.stack([mR, TTM, Pos], axis=1)
-    state_tensor = torch.tensor(state, dtype=torch.float32)
-
-    with torch.no_grad():
-        action = agent.actor(state_tensor).cpu().numpy()
-
-    return action.squeeze()
+        return actions_list[action_index]

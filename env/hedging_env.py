@@ -5,10 +5,10 @@ class HedgingEnv:
     def __init__(self, spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r):
         """
         Docstring for __init__
-       
+        
         :param self: Description
         :param spot: The current market price ogf the underlying asset
-        :param strike: The set price that an option can be excercised
+        :param strike: The set price that an option can be excercised 
         :param maturity: Time remaining until the option can be excercised. Acts like a horizion for each episode.
         :param vol: Expected volatility, the riskiness of the stock price. Higher vol makes hedging tasks much harder because the price mves more unpredictable
         :param mu: Description
@@ -54,10 +54,10 @@ class HedgingEnv:
 
         # Reward P&L
         step_reward = ((spot_next - spot_prev) * action 
-                        - abs((action - pos_prev) * spot_next) * self.kappa 
+                        - abs((action - pos_prev) * spot_prev) * self.kappa 
                         - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
                         + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
-        
+
         if done: 
             step_reward -= action * spot_next * self.kappa
            
