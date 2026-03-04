@@ -43,7 +43,7 @@ def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
         avg_reward = np.mean(score_window)
 
         if episode % 100 == 0:
-            print(f"Episode {episode}, Reward {episode_reward:.4f}, Avg {avg_reward:.4f}, Noise {noise_scale:.3f}")
+            print(f"DDPG Episode {episode}, Reward {episode_reward:.4f}, Avg {avg_reward:.4f}, Noise {noise_scale:.3f}")
 
 
         if avg_reward > stop_avg_reward and len(score_window) == score_window.maxlen:

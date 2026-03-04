@@ -6,12 +6,13 @@ import numpy as np
 
 class Policy():
 
-    def __init__(self, agent, strike, vol, r):
+    def __init__(self, agent, dqn_agent, strike, vol, r):
 
         self.strike = strike
         self.vol = vol
         self.rate = r
         self.agent = agent
+        self.dqn_agent = dqn_agent
 
 
     def policy_BSM(self, mR, TTM, Pos):
@@ -47,3 +48,12 @@ class Policy():
             action = self.agent.actor(state_tensor).cpu().numpy()
 
         return action.squeeze()
+    
+    def policy_DQN(self, mR, TTM, Pos):
+        state = np.stack([mR, TTM, Pos], axis=1)
+        state_tensor = torch.tensor(state, dtype=torch.float32)
+
+        with torch.no_grad():                        # Här är policyn argmax som ända skillnaden
+            action_index = dqn_agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
+
+        return actions_list[action_index]

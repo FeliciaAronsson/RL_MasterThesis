@@ -44,7 +44,7 @@ def train_DQN(episodes, env, agent, batch_size, actions_list, score_window, stop
         avg_reward = np.mean(score_window)
 
         if episode % 100 == 0:
-            print(f"Episode {episode}, Reward {episode_reward:.4f}, Avg {avg_reward:.4f}")
+            print(f"DQN Episode {episode}, Reward {episode_reward:.4f}, Avg {avg_reward:.4f}")
 
 
         if avg_reward > stop_avg_reward and len(score_window) == score_window.maxlen:

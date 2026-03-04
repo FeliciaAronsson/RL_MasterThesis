@@ -54,7 +54,7 @@ dqn_agent = DQNAgent(state_dim, action_dimension, hidden_dim, tau, gamma, learnR
 # Stopping criterion
 score_window = deque(maxlen=200)
 stop_avg_reward = 0
-episodes = 1000
+episodes = 200
 
 # Variables to add noice (increase exploration)
 noise_scale = 0.2
@@ -62,14 +62,15 @@ noise_decay =  0.9995
 min_noise = 0.01
 
 
-#episode_rewards = train_RL(episodes, env, ddpg_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
-
-episode_rewards = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window, stop_avg_reward)
+episode_rewards_DDPG = train_RL(episodes, env, ddpg_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
+episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window, stop_avg_reward)
 
 # Cost function
 n_trails = 1000
 n_steps = int(maturity / dT)
 
+#policy_dqn = Policy(dqn_agent, strike, vol, r, actions_list)
+#policy_rl = Policy(ddpg_agent, strike, vol, r, actions_list )
 
 def policy_BSM(mR, TTM, Pos):
     """
@@ -111,7 +112,7 @@ def policy_DQN(mR, TTM, Pos):
 
 
 Cost_BSM = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-#Cost_RL = compute_cost(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+Cost_RL = compute_cost(policy_RL, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
 Cost_DQN = compute_cost(policy_DQN,  n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
 
 OptionPrice = bs_price(spot, strike, r, maturity, vol)
@@ -122,6 +123,6 @@ OptionPrice = bs_price(spot, strike, r, maturity, vol)
 #plot_histogram(Cost_RL, Cost_BSM)
 #plot_learningcurve(episode_rewards)
 
-print_hedge_table(Cost_BSM, Cost_DQN, OptionPrice)
-plot_histogram(Cost_DQN, Cost_BSM)
-plot_learningcurve(episode_rewards)
+print_hedge_table(Cost_BSM, Cost_RL, Cost_DQN, OptionPrice)
+plot_histogram(Cost_RL, Cost_DQN, Cost_BSM)
+plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN)
