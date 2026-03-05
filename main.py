@@ -61,7 +61,7 @@ td3_agent = TD3Agent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
 # Stopping criterion
 score_window = deque(maxlen=200)
 stop_avg_reward = 0
-episodes = 5000
+episodes = 1000
 
 # Variables to add noice (increase exploration)
 noise_scale = 0.2
@@ -69,8 +69,8 @@ noise_decay =  0.9995
 min_noise = 0.01
 
 # Train without ou noice
-episode_rewards_DDPG = train_RL(episodes, env, ddpg_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
-episode_rewards_TD3 = train_RL(episodes, env, td3_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
+episode_rewards_DDPG = train_RL(episodes, env, ddpg_agent, batch_size, min_noise, noise_scale, noise_decay, stop_avg_reward)
+episode_rewards_TD3 = train_RL(episodes, env, td3_agent, batch_size, min_noise, noise_scale, noise_decay, stop_avg_reward)
 episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window, stop_avg_reward)
 
 

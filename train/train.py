@@ -1,7 +1,8 @@
 import numpy as np
+from collections import deque
 
 
-def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward):
+def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, stop_avg_reward):
     """
     Training the enviroment
     
@@ -16,6 +17,7 @@ def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
     """
 
     all_episode_rewards = []
+    score_window = deque(maxlen=episodes)
 
     # Training
     for episode in range(episodes):
@@ -43,7 +45,7 @@ def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
         avg_reward = np.mean(score_window)
 
         if episode % 100 == 0:
-            print(f"DDPG Episode {episode}, Reward {episode_reward:.4f}, Avg {avg_reward:.4f}")
+            print(f"Episode {episode}, Reward {episode_reward:.4f}, Avg {avg_reward:.4f}")
 
 
         if avg_reward > stop_avg_reward and len(score_window) == score_window.maxlen:
@@ -55,7 +57,7 @@ def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
 import numpy as np
 
 
-def train_ou(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward):
+def train_ou(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, stop_avg_reward):
     """
     Training the enviroment
     
@@ -70,6 +72,7 @@ def train_ou(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
     """
 
     all_episode_rewards = []
+    score_window = deque(maxlen=200)
 
     # Training
     for episode in range(episodes):
@@ -97,7 +100,7 @@ def train_ou(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
         avg_reward = np.mean(score_window)
 
         if episode % 100 == 0:
-            print(f"DDPG Episode {episode}, Reward {episode_reward:.4f}, Avg {avg_reward:.4f}")
+            print(f"Episode {episode}, Reward {episode_reward:.4f}, Avg {avg_reward:.4f}")
 
 
         if avg_reward > stop_avg_reward and len(score_window) == score_window.maxlen:
