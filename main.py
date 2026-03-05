@@ -11,7 +11,7 @@ from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
 
 #from utils.policy import policy_BSM, policy_RL
-from train.train import train_RL, train_ou_noice
+from train.train import train_RL, train_ou
 from train.train_DQN import train_DQN
 from utils.print import plot_learningcurve, plot_histogram, print_hedge_table
 
@@ -75,8 +75,8 @@ episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_li
 
 
 # Train with ou noice
-#episode_rewards_DDPG = train_ou_noice(episodes, env, ddpg_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
-#episode_rewards_TD3 = train_ou_noice(episodes, env, td3_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
+#episode_rewards_DDPG = train_ou(episodes, env, ddpg_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
+#episode_rewards_TD3 = train_ou(episodes, env, td3_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
 #episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window, stop_avg_reward)
 
 # Cost function
