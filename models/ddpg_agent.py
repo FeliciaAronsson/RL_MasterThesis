@@ -5,6 +5,7 @@ from models.actor import Actor
 from models.critic import Critic
 from utils.replay_buffer import ReplayBuffer
 import numpy as np
+from utils.ou_noice import OUNoice
 
 class DDPGAgent:
     def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate):
@@ -26,8 +27,26 @@ class DDPGAgent:
         self.opt_critic = optim.Adam(self.critic.parameters(), lr= learnRate)
 
         self.buffer = ReplayBuffer()
+        self.noise = OUNoice(mu = np.zeros(act_dim))
 
-    def select(self, s, noise_scale):
+
+    def select(self, state, train = True):
+
+        self.actor.eval()
+
+        with torch.no_grad():
+            action = self.actor(torch.tensor(state).float().unsqueeze(0)).item()
+
+        self.actor.train()
+        
+        if train:    #nu är noise här istället för i train ddpg
+            action = np.clip(action + self.noise()[0], 0.0, 1.0)
+
+        return action
+
+        
+
+    def select1(self, state, noise_scale):
         with torch.no_grad():
             action = self.actor(torch.tensor(state).float().unsqueeze(0)).item()
 
@@ -37,6 +56,8 @@ class DDPGAgent:
 
             return np.clip(action, 0.0, 1.0)
 
+    def reset_noise(self):
+        self.noise.reset()
 
     def train(self, batch=64):
         if len(self.buffer.buffer) < batch:
