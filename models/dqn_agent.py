@@ -33,15 +33,11 @@ class DQNAgent:
         if train and np.random.random() < self.epsilon_start:
             return np.random.randint(0, self.act_dim - 1)
         
-  
-        #state = torch.tensor(state).float().unsqueeze(0)
-        #self.qnet.eval()
         
         with torch.no_grad():
             state_tensor = torch.tensor(state).float().unsqueeze(0)
             q_values = self.qnet(state_tensor)
 
-        #self.qnet.train()
         return torch.argmax(q_values).item()
 
 
