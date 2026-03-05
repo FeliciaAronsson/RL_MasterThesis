@@ -1,7 +1,7 @@
 import numpy as np 
 
 class OUNoice():
-    def __init__(self, mu, sigma, theta, dT, x0 ):
+    def __init__(self, mu, sigma = 0.2, theta = 0.15, dT = 1e-2, x0 = None):
         self.mu = mu
         self.sigma = sigma
         self.theta = theta

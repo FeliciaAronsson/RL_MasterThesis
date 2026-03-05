@@ -36,15 +36,15 @@ def print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, OptionPrice):
 
     print(HedgeComp)
 
-def plot_histogram(Cost_RL, Cost_DQN, Cost_TD3, Cost_BSM):
+def plot_histogram(Cost_DDPG, Cost_DQN, Cost_TD3, Cost_BSM):
     num_bins = 10
 
     plt.figure(figsize=(10, 5))
 
-    plt.hist(-Cost_RL, bins=num_bins, color='red', alpha=0.5, label='RL(DDPG) Hedge')
+    plt.hist(-Cost_DDPG, bins=num_bins, color='red', alpha=0.5, label='RL(DDPG) Hedge')
     plt.hist(-Cost_BSM, bins=num_bins, color='blue', alpha=0.5, label='Theoretical BLS Delta')
     plt.hist(-Cost_DQN, bins=num_bins, color='green', alpha=0.5, label='DQN hedge')
-    plt.hist(-Cost_TD3, bins=num_bins, color='yellow', alpha=0.5, label='TD3 hedge')
+    plt.hist(-Cost_TD3, bins=num_bins, color='blue', alpha=0.5, label='TD3 hedge')
     plt.xlabel('Hedging Costs')
     plt.ylabel('Number of Trials')
     plt.title('RL Hedge Costs vs. BLS Hedge Costs')
@@ -58,7 +58,7 @@ def plot_learningcurve(all_episode_rewards_DDPG, all_episode_rewards_DQN, all_ep
     # Raw rewards (lite genomskinliga så de inte tar över)
     plt.plot(all_episode_rewards_DDPG, label='Episode Reward DDPG', alpha=0.3, color='red')
     plt.plot(all_episode_rewards_DQN, label='Episode Reward DQN', alpha=0.3, color='green')
-    plt.plot(all_episode_rewards_TD3, label='Episode Reward TD3', alpha=0.3, color='yellow')
+    plt.plot(all_episode_rewards_TD3, label='Episode Reward TD3', alpha=0.3, color='blue')
     # Calculate the rolling men over 100 episodes to visualize trends
     rolling_mean_DDPG = pd.Series(all_episode_rewards_DDPG).rolling(window=100).mean()
     rolling_mean_DQN = pd.Series(all_episode_rewards_DQN).rolling(window=100).mean()
@@ -66,7 +66,7 @@ def plot_learningcurve(all_episode_rewards_DDPG, all_episode_rewards_DQN, all_ep
 
     plt.plot(rolling_mean_DDPG, label='Moving Average (100 episodes) DDPG', color='red', linewidth=2)
     plt.plot(rolling_mean_DQN, label='Moving Average (100 episodes) DQN', color='green', linewidth=2)
-    plt.plot(rolling_mean_TD3, label='Moving Average (100 episodes) DQN', color='yellow', linewidth=2)
+    plt.plot(rolling_mean_TD3, label='Moving Average (100 episodes) TD3', color='blue', linewidth=2)
 
     plt.xlabel('Episode')
     plt.ylabel('Total Reward')
