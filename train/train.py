@@ -55,7 +55,7 @@ def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
 import numpy as np
 
 
-def train_ou_noice(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward):
+def train_ou(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward):
     """
     Training the enviroment
     
@@ -80,7 +80,7 @@ def train_ou_noice(episodes, env, agent, batch_size, min_noise, noise_scale, noi
         
         # Run until time to maturity is reached
         while not done:
-            action = agent.select(state) #, noise_scale)
+            action = agent.select_ou(state)
             reward, next_state, done = env.step(action)
             
             agent.buffer.add(state, action, reward, next_state, done)
@@ -90,7 +90,6 @@ def train_ou_noice(episodes, env, agent, batch_size, min_noise, noise_scale, noi
             episode_reward += reward
 
         # Decay noise over episodes
-        #noise_scale = max(min_noise, noise_scale * noise_decay)
         all_episode_rewards.append(episode_reward)
 
         # Logging & stopping 

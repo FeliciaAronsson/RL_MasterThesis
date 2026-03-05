@@ -30,7 +30,7 @@ class DDPGAgent:
         self.noise = OUNoice(mu = np.zeros(act_dim))
 
 
-    def select(self, state, train = True):
+    def select_ou(self, state, train = True):
 
         self.actor.eval()
 
@@ -46,7 +46,7 @@ class DDPGAgent:
 
         
 
-    def select1(self, state, noise_scale):
+    def select(self, state, noise_scale):
         with torch.no_grad():
             action = self.actor(torch.tensor(state).float().unsqueeze(0)).item()
 
