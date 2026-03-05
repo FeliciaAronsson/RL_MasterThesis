@@ -38,7 +38,7 @@ class TD3Agent:
         # Replay buffer
         self.buffer = ReplayBuffer()
 
-    def select(self, state, train = True):
+    def select_ou(self, state, train = True):
 
             self.actor.eval()
 
@@ -56,7 +56,7 @@ class TD3Agent:
         self.noise.reset()
 
 
-    def select1(self, s, noise_scale):
+    def select(self, s, noise_scale):
         with torch.no_grad():
             action = self.actor(torch.tensor(s).float().unsqueeze(0)).item()
 
