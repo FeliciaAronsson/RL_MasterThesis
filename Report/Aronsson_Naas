@@ -1,0 +1,723 @@
+% @Author: Kevin Kamm
+% @Date:   2024-05-31 08:51:32
+% @Last Modified by:   Kevin Kamm
+% @Last Modified time: 2024-09-10 09:46:48
+\documentclass[%
+a4paper,							
+11pt,								
+bibliography=totoc,						
+abstracton=true					
+]
+{scrartcl}
+\usepackage[pagewise]{lineno}
+% \linenumbers % Comment out for final version
+\usepackage[a4paper,left=3.0cm,right=2.5cm, top=2.5cm, bottom=3.0cm]{geometry}
+\usepackage[headsepline=.4pt,footsepline=.4pt,automark,autooneside=false]{scrlayer-scrpage}
+\pagestyle{scrheadings} 
+\automark[subsection]{section} 
+\automark*[subsubsection]{subsection}
+\ihead{\scriptsize\rightmark}\chead{ }
+\cfoot{\pagemark}
+
+\usepackage[swedish,english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern} %latin modern
+\usepackage{setspace} % 1.5-line spacing
+\usepackage{csquotes} % provides \enquote
+\usepackage{epigraph} % provides \epigraph
+\setlength\epigraphwidth{.6\textwidth}
+\setlength\epigraphrule{0pt}
+\interfootnotelinepenalty=10000 % avoid footnote page breaks
+\usepackage{abstract}
+
+\usepackage{calc}
+\usepackage{xspace} % provides \xspace
+
+% Math symbols & environments
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm,thmtools}
+\usepackage{mathtools}
+\usepackage{bbm}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+
+% Figures & color
+\usepackage{graphicx} 
+\usepackage{float}
+\usepackage[section]{placeins} % float barrier after sections
+\usepackage{pdflscape} % provides \includepdf
+\usepackage[format=plain]{caption}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+\usepackage{tikz}
+\usetikzlibrary{calc,positioning,arrows.meta}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+
+% Code Highlighting & Todo Notes
+\usepackage{minted}
+\usepackage{todonotes} % provides \todo
+
+% Tables & Lists
+\usepackage{paralist} % provides compact environments
+\usepackage{tabularx} % provides tabularx
+\usepackage{booktabs} % provides \toprule
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{diagbox} % provides \diagbox
+
+
+\usepackage[
+	backend=bibtex,
+	style=authoryear-comp,
+	maxbibnames=9,
+	maxcitenames=2,
+	dashed=false,
+	natbib=true,
+	sortcites=true,
+	block=space
+]{biblatex}
+\renewcommand*{\mkbibnamefamily}[1]{\textsc{#1}}
+\renewcommand*{\mkbibnamegiven}[1]{\textsc{#1}}
+\renewcommand*{\finalnamedelim}{\ \bibstring{and}\ }
+\renewcommand*{\bibfont}{\footnotesize}
+\addbibresource{literature.bib} 
+
+\usepackage{hyperref}
+\usepackage{cleveref} % provides \Cref
+\hypersetup{
+    colorlinks,
+    linkcolor={red},
+    citecolor={blue},
+    urlcolor={blue}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Macros
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\1}{\mathbbm{1}}
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\DeclareMathOperator*{\argmin}{argmin}
+
+
+%% Verbatim examples
+\SaveVerb{python}=(Intel-)Python 3.10=
+\newcommand{\python}{\protect\UseVerb{python}\xspace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Glossary
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{glossaries}
+\newacronym{ABC}{ABC}{Alphabet}
+
+\makeglossaries
+\newglossarystyle{mylist}{%
+  \setglossarystyle{list}% base this style on the list style
+  \renewcommand*{\glossentry}[2]{%
+    \item[\glsentryitem{##1}\glstarget{##1}{\glossentryname{##1}}]%
+\glossentrydesc{##1}\glspostdescription\space}%
+}
+\setglossarystyle{mylist}
+\renewcommand*{\glstextformat}[1]{\color{black}#1}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Begin Document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\onehalfspacing
+\pagestyle{plain}
+\pagenumbering{roman}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Title Page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{titlepage}
+    \begin{center}
+    \begin{tikzpicture}[overlay,remember picture,align=center,anchor=north]
+        \path let \p1 = (current page.north) in coordinate (pageNorth) at (0,\y1);
+        \path let \p1 = ($(current page.north)!0.5!(current page.south)$) in coordinate (pageCenter) at (0,\y1);
+        \node[align=center,anchor=north, yshift=-1cm] (LogoUmU) at (pageNorth) {\includegraphics{Figures/LogoUmU.png}};
+        \node[align=center,anchor=north, below = of LogoUmU.south] (BackgroundUmu) {\includegraphics[width=.9\paperwidth]{Figures/Titlepage.jpg}};
+        \node[anchor=south west,align=left] at (BackgroundUmu.south west) {\color{white}
+            \begin{tabular}{lll}
+                Supervisor & Title Kevin Kamm & 
+Department of Mathematics \& Mathematical Statistics\\
+                Supervisor & Title Name Surname & Affiliation\\
+                Examiner & Title Natalya Pya Arnqvist & Department of Mathematics \& Mathematical Statistics 
+            \end{tabular}
+        };
+    \end{tikzpicture}
+    \end{center}
+\vspace*{5cm}
+\begin{center}
+    {%  
+        \color{white}
+        \noindent
+        \Huge
+        \bfseries 
+        \sffamily
+        Title of Thesis
+    }\\[1em]
+    {%
+        \color{white}
+        \noindent
+        \Large
+        \bfseries 
+        \sffamily
+        Subtitle of Thesis
+    }%
+\end{center}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\footnotetext[1]{Department of Mathematics and Statistics, Umeå University, Sweden}
+\footnotetext[2]{E-mail: anje0101@student.umu.se}
+\footnotetext[3]{E-mail: fear0017@student.umu.se}
+
+\begin{center}
+    \color{white}
+    \large
+    Felicia Aronsson%
+    \footnotemark[1]{}\textsuperscript{,}%
+    \footnotemark[2]{}
+    \hspace{2em}
+    Jelena Nääs%
+    \footnotemark[1]{}\textsuperscript{,}%
+    \footnotemark[3]{}
+    \hspace{2em}
+\end{center}
+\begin{center}
+    \color{white}
+    \large
+    Examination Date: \today
+\end{center}
+\vfill
+\begin{center}
+    Master thesis, 30 hp\\
+    M. Sc. Industrial Engineering \& Management, 300 hp\\
+    Spring term 2026
+\end{center}
+
+
+\renewcommand{\thefootnote}{\arabic{footnote}}
+
+
+
+
+\thispagestyle{empty}
+\end{titlepage}
+\pagenumbering{Roman}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Abstracts
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+    This is the english abstract.
+\end{abstract}
+
+\newpage
+\renewcommand{\abstractname}{Sammanfattning}
+\begin{abstract}
+    Det är svenska sammanfattning.
+\end{abstract}
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Acknowledgements
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section*{Acknowledgements}
+%\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Glossaries & Table of Contents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\printglossary
+\clearpage
+\newpage
+{\hypersetup{linkcolor=black}
+\tableofcontents
+}
+\newpage
+\pagenumbering{arabic}
+\pagestyle{scrheadings}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Introduction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}\label{sec:Introduction}
+\epigraph{\enquote{Everything needs to be explained and nothing is clear.}}{---\textit{Prof. Dr. Andrea Pascucci,\\ University of Bologna}}
+%% Intro
+\subsection{Machine learning and AI}
+Over the past decade, machine learning has experienced rapid development, driven by advances in computational power, increased data availability, and progress in neural network architectures. These developments have enabled algorithms to solve increasingly complex problems in areas such as computer vision, natural language processing, and decision-making. One branch of machine learning that has received growing attention is reinforcement learning (RL), which focuses on learning optimal behaviour through interaction with an environment. Reinforcement learning is a subfield of machine learning concerned with sequential decision-making problems. In Reinforcement learning, an agent interacts with an environment and learns a strategy, known as a policy, by receiving rewards based on the actions it takes (p.26 \cite{Hands_on_machine_learning_with_Scikit-Learn})
+
+\subsection{Reinforcement Learning}
+Reinforcement learning addresses sequential decision-making problems where an agent interacts with an environment by taking actions and receiving feedback in the form of rewards. Through repeated interaction, the agent learns a strategy, known as a policy, that aims to maximize the cumulative reward over time. Unlike supervised learning, where models are trained on labelled datasets, reinforcement learning relies on trial-and-error exploration to discover effective strategies (p.2, \cite{sutton2018reinforcement}). This makes RL particularly suitable for problems where decisions must be made dynamically under uncertainty.\\
+\\
+Many real-world decision problems can be formulated as stochastic control problems, where an agent must determine optimal actions in an uncertain and evolving environment. Traditionally, such problems have been studied using tools from dynamic programming and stochastic calculus. However, these methods often rely on strong assumptions or become computationally infeasible when the environment is complex or high-dimensional. Reinforcement learning offers a flexible alternative by approximating optimal strategies directly through interaction with simulated environments.\\
+\\
+In recent years, reinforcement learning has demonstrated remarkable success in several domains. A well-known example is the work by DeepMind, where RL combined with deep neural networks enabled algorithms to outperform human experts in complex games such as Go and Atari video games. These successes have increased interest in applying reinforcement learning to other domains involving complex sequential decisions, including finance.
+
+\subsection{Reinforcement Learning in finance}
+Financial markets present a natural setting for sequential decision-making under uncertainty. Tasks such as portfolio optimization, algorithmic trading, and risk management all involve making decisions over time based on evolving market conditions. One important problem in financial risk management is the hedging of derivative securities, such as options. Hedging strategies aim to reduce the financial risk associated with price movements in the underlying asset.
+
+\subsection{Options hedging}
+A classical approach to option hedging is based on the Black–Scholes framework, where the sensitivity of an option’s value with respect to the underlying asset price, known as the delta, is used to construct a hedging strategy. Delta hedging provides a theoretically optimal hedge under a set of idealized assumptions, including continuous trading and perfectly known model parameters. In practice, however, these assumptions rarely hold. Trading occurs at discrete time intervals, market conditions may deviate from model assumptions, and transaction costs may be present. As a result, classical hedging strategies may perform suboptimally in real-world settings.
+
+\subsection{Motivation and research objektive}
+Reinforcement learning offers a data-driven approach to learning hedging strategies without relying on explicit analytical solutions. By framing the hedging problem as a sequential decision-making task, an RL agent can learn to adjust a hedging position over time based on observed market states. Through interaction with a simulated market environment, the agent can learn strategies that aim to minimize hedging errors or costs.
+%% Literature Review
+\paragraph*{Literature review.}
+The main book used for reinforcement learning theory is the book \textit{Reinforcement Learning an introduction} by \cite{sutton2018reinforcement}. The method and application to hedging is related to the work of \cite{cao2020deephedging} in their article \textit{Deep Hedging of Derivatives Using Reinforcement Learning}.
+\todo{Expand}
+
+%% Aim/Research Questions
+\paragraph*{Aim of the thesis.}
+\todo{Goal of thesis}
+The objective of this thesis is to investigate whether reinforcement learning can be used to construct effective hedging strategies for options. In particular, RL-based strategies are compared to the classical Black–Scholes delta hedging approach in terms of hedging cost and performance.\\
+\\
+\todo{Or this approach for the aim of the theisis}
+The objective of this thesis is to investigate the use of reinforcement learning for option hedging. In particular, reinforcement learning-based hedging strategies are implemented and evaluated in a simulated market environment. The performance of these strategies is then compared to the classical Black–Scholes delta hedging approach in terms of hedging cost and risk
+
+\begin{compactenum}[{\bfseries RQ}1]
+    \item \label{item:RQ1} Is it possible to outperform the Black-Scholes delta hedging approach with reinforcement learning?
+    \item \label{item:RQ2} Can we create an ensemble of different reinforcement learning agents, which increases the hedging performance even further?
+    \item \label{item:RQ3} Question 3?
+\end{compactenum}
+\newcommand{\RQone}{{\bfseries RQ}\ref{item:RQ1}}
+\newcommand{\RQtwo}{{\bfseries RQ}\ref{item:RQ2}}
+\newcommand{\RQthree}{{\bfseries RQ}\ref{item:RQ3}}
+
+You can later reference the research questions as follows: \RQone, \RQtwo, \RQthree.
+
+%% Outline
+\bigskip
+This thesis is structured as follows:
+\todo{outline}
+In \Cref{sec:Theory}, we will discuss the relevant theory for this thesis. The section consists of 
+an introduction to typography (cf. \Cref{sec:Typography}) and notes on figures, tables and mathematical 
+environments in \Cref{sec:FiguresTables,sec:Equations}, respectively.
+
+After that, we will discuss the methodology and results in \Cref{sec:Results}. Therein, we\dots 
+Last but not least, we answer the research questions in \Cref{sec:Conclusion} and conclude 
+the findings of the thesis.
+\section{Background}
+\subsection{Reinforcement learning} \label{sec:Reinforcement learning}
+This section aims to explain the core concepts of reinforcement learning and related theories.
+\\\\
+The fundamentals of reinforcement learning involve an \textit{agent} that interacts with an \textit{environment} by making \textit{observations}, taking \textit{actions}, and receiving \textit{rewards}. This process can be seen in Figure \ref{fig:2.1Reinforcement learning}:
+
+\begin{figure} [h!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Template/Figures/2.1Reinforcement.png}
+    \caption{The interaction between agent and environment, \cite{sutton2018reinforcement}, p.48}
+    \label{fig:2.1Reinforcement learning}
+\end{figure}
+\noindent where $S_t$ is the state, $R_t$ is the reward and $A_t$ is the action at time t. The objective of the agent is to learn a behavior that maximizes the cumulative reward over time, denoted as $G_t$. The formula for maximizing the expected discounted return can be seen below (\cite{sutton2018reinforcement}, p.55, eq 3.8):
+
+\begin{equation}
+    G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + ... + \gamma^{T-1} R_{T} 
+\end{equation}
+where T is the terminal date and $\gamma\in(0,1]$ is a discount factor. 
+\\\\
+In addition to the agent and environment, other important elements of reinforcement learning are a policy, a reward signal, and a value function. A policy $\pi$ defines how the agent behaves at a given state, in practice mapping states to actions, which is written as $A_t = \pi(S_t)$ at time $t$. When the reinforcement algorithm advances the policy updates. The reward signal specifies the goal of the learning process by providing immediate feedback on the agent’s actions. The value function, in contrast, evaluates the long-term desirability of states or actions by estimating expected future rewards (\cite{sutton2018reinforcement}, page 6).
+
+\subsection{Financial Background}
+This section provides an overview of key concepts in derivatives and hedging, related to this master thesis.   
+
+\subsubsection{Options}
+Options are financial derivatives that grant the right, but not the obligation, to either buy or sell an asset at a predetermined price (the strike price) on or before a specified date. Options may therefore be either call options or put options, and they are further classified according to the flexibility of their exercise date. One of the simplest variants is the European option, which can only be exercised at maturity. A call option generates profit if the price of the underlying asset rises above the strike price, while a put option becomes profitable if the price falls below the strike price (\cite{investments}, p.51-52). It is also possible to write an option, meaning that an investor sells an option contract they do not own, thereby assuming the obligation to fulfill the contract terms should the buyer choose to exercise the option. In exchange for bearing this risk, the option writer receives a premium. These features give rise to four basic options positions: long call, short call, long put, and short put. 
+
+\subsubsection{Black-Scholes}
+Black-Scholes provides a theoretical framework for option pricing. Under this model, the value of an option is assumed to be affected by the following factors: 
+(i) the price of the underlying asset, 
+(ii) the strike price, 
+(iii) the volatility of the underlying asset, 
+(iv) the risk-free interest rate, and 
+(v) the time to maturity. The value of a European call option is given by the following formula (\cite{investments}, p.725, eq.21.1)
+\begin{equation}
+C_0 = S_0 N(d_1) - X e^{-rT} N(d_2)
+\label{eq:bs_call}
+\end{equation}
+
+where
+\begin{equation*}
+d_1 = \frac{\ln(S_0 / X) + \left(r + \frac{\sigma^2}{2}\right)T}{\sigma \sqrt{T}},
+\qquad
+d_2 = d_1 - \sigma \sqrt{T}.
+\end{equation*}
+
+\begin{align*}
+C_0 & = \text{current call option value}, \\
+S_0 & = \text{current stock price}, \\
+N(d) & = \text{cumulative distribution function of the standard normal distribution}, \\
+X & = \text{exercise (strike) price}, \\
+r & = \text{risk-free interest rate (continuously compounded)}, \\
+T & = \text{time to expiration (in years)}, \\
+\sigma & = \text{standard deviation of the stock's continuously compounded return}.
+\end{align*}
+
+\subsubsection{Hedging}
+Hedging is a strategy aimed at limiting risk in investments and is commonly used when trading derivatives, such as options. To hedge risk connected to derivatives, traders can monitor various sensitivities of a derivative’s value, commonly referred to as the Greek letters. These sensitivities capture how the value of a position responds to changes in key market variables, such as the underlying asset price (delta), volatility (vega), the passage of time (theta), and interest rates (rho). One of the most important Greek letters is delta, which represents how sensitive the derivative is to a change in the underlying asset. In practice, traders often seek to maintain delta-neutral positions, thereby reducing exposure to small price movements in the underlying asset. Since the delta changes over time, a trader’s hedge must be adjusted through periodic rebalancing. In a frictionless market, where transaction costs and other market imperfections are absent, the theoretically optimal strategy involves continuous rebalancing. However, real markets are characterized by transaction costs and various trading frictions (\cite{cao2020deephedging}, p.1-2).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Theory
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Theory}\label{sec:Theory}
+The outline of the theory section is as follows: Initially, the financial background is presented, then the fundamentals of reinforcement is discussed, and lastly the connection for using reinforcement learning in financial applications is introduced. 
+
+
+
+\subsubsection{Markov Decision Process}
+In reinforcement learning, the probability of the next state and the reward only depends on the current state and action. This characteristic is known as the Markov property and is defined as (\cite{sutton2018reinforcement} on page 48, equation 3.2): 
+ \begin{equation}
+     p(s',r | s,a) = Pr(S_{t} = s', R_{t} = r | S_{t - 1} = s, A_{t-1} = a)
+     \label{eq:Markov Property}
+ \end{equation}
+When the sets of states S, actions A, and rewards R are finite, together with this probability function, they define a finite Markov decision process (MDP). MDP is a mathematical framework for modeling sequential decision-making in environments with uncertain outcomes. In reinforcement learning, an action influences not only the immediate reward but also future outcomes, since the chosen action affects the state in which the agent will subsequently find itself. Consequently, decision-making in MDPs involves a trade-off between immediate and delayed rewards. The journey that the agent takes through the MDP is known as its trajectory. To guide the selection of a policy that maximizes cumulative reward, state value functions, $v_\pi(s)$, or action value functions, $q_\pi(s,a)$, are used. State value function, estimates the expected return from a given state, and the action value function, estimates the expected return from taking a specific action in a given state (\cite{sutton2018reinforcement}, page 71 eq 3.12.). \todo{Add about transition probabilities}
+
+
+\subsubsection{Value Functions}
+
+The framework for a Markov decision process is defined by the state-value function. $v_\pi(s)$ as the expected value when an agent stands in state $s$ and following the policy $\pi$:
+ \begin{equation}
+     v_\pi(s) = \mathbb{E}[G_t | S_t = s ] = \mathbb{E}[\sum_{k=0}^\infty \gamma ^k R_{t+k+1 } | S_t = s] \label{eq:value function 3.10}
+ \end{equation}
+where $ \mathbb{E}_\pi[.]$ denotes the expected value of a random variable given that the agent follows policy $\pi$ and $t$ at any time step, and $\gamma \in [0,1]$ is the discount factor which weights immediate rewards against future rewards. 
+\\
+\\
+The action-value function function, $q_\pi(s,a)$ is the expected value if the agents takes an action, $a$, from state, $s$, and following the policy $\pi$: 
+
+
+\begin{equation}
+    q_\pi(s,a) = \mathbb{E}[G_t | S_t = s, A_t = a] = \mathbb{E}[\sum_{k=0}^\infty \gamma ^k R_{t+k+1 } | S_t = s, A_t = a] 
+    \label{eq: action-value function 3.11}
+\end{equation}
+
+
+
+\subsubsection{Bellman equation}\label{sec:Bellman equation}
+
+The Bellman equation provides the connecting web of our subspace, i.e., the subspace that the agent needs to transverse(?). The Bellman equation allows us to convert the information of the environment into an improvement of the agent's behavior. It is a universal concept in the world of sequential decision-making. 
+\\
+\\
+The Bellman equation connects all the state values, it allows us to convert information of the environment into improvements of the agents behavior. The value function can be expressed recursive, and the bellman equation breaks down the state in the imitiate reward plus the discontinued value of the later rewards. For the state value funciton, $v_\pi(s)$ it¨s defined as:
+
+\begin{equation}
+    v_\pi(s) = \mathbb{E}[G_t | S_t = s] = \sum_a \pi(a|s) \sum _{s´,a}p(s',r|s,a) [r+\gamma v_\pi(s')]\label{eq: Bellman-equation value function 3.12}
+\end{equation} 
+where its implicit that the action, a, are taken from the set $ A(s)$. and the next state $s'$ are taken from the set $S$, and the rewards, $r$, are taken from the set $R$.(\cite{sutton2018reinforcement}, page 70 eq 3.12).
+The equations is a sum of all three valiables, are for each tripple, we compute its probability, $\pi(a|s)p(s',r|s,a)$
+\\
+
+\subsubsection{Optimal value function}
+Solving reinforcement learning tasks means finding a policy that achives a lot of rewards, for a finite MDP. There exists an optimal policy, (could be more than one), its denoted $\pi_*$. The optimal state valur function is deoted $ v_*$ and defined as
+The optimal 0
+\begin{equation}
+    v_*(s) = max_\pi v_\pi(s),
+\end{equation}
+for all $ s\in S$.
+The optimal policy for the action-value function is defined as 
+\begin{equation}
+        q_*(s,a) = max_\pi q_\pi(s,a),
+\end{equation}
+for all $ s\in S$ and $a\in A$. $q_*$ can be written in terms of $v_*$:
+ 
+\begin{equation}
+    q_*(s,a) = \mathbb{E}[R_{t+1} + \gamma v_*(S_{t+a} | S_t = s, A_t = a] = \sum_a \pi(a|s) \sum _{s´,a}p(s',r|s,a) [r+\gamma v_\pi(s')]\label{eq: Bellman-equation action_value function 3.15}
+\end{equation}
+
+\subsubsection{Dynamic Programming}  
+Dynamic programming refer to algorithms that can find optimal policies, given a perfect model of the environment.  It refers to the algorithms used to find optimal policies which have complete knowledge of the environment as a Markov decision process. In other words, Dynamic Programming has access to $p(s', r | s, a)$ (policy). (An unrealistic assumption in the real world)
+
+\subsubsection{Policy evaluation}
+Compute the state value function, $v_\pi(s)$ or action value function, $q_\pi(s,a)$ for a given policy, $\pi$, for all states or state action pairs, under some MDP (Markov decision process). 
+Starting by randomly initializing the state values, and then calculating \begin{equation}
+    V(s) \xleftarrow[]{} \sum_{a\in A(s)}\pi(a | s) \sum_{s'\in S,  r \in R} p(s', r | s, a)´[r + \gamma V(s')].
+\end{equation}
+(V(s) is capital since we estimate the true values)
+One repeat over all states is called a sweep, and this is done until the state values converge. (We use the Bellman equation, \ref{eq: Bellman-equation value function 3.12}, and it always converges for an mdp). 
+\textbf{Policy Improvement}
+\subsubsection{Generalized Policy Iteration}
+\epigraph{\enquote{GPI refers to the general idea of letting policy evaluation and policy imporovement process interact, independent of the granularity and other detalis of the two processes. Almost all reinforcement learning methods are well described as GPI}}{---\textit{Sutton, Barto\\ Reinforcement learning book}}
+GPI is a class of algorithms: \\
+\textbf{Policy improvement:} To find $\pi_*$ and $v_*$, \begin{equation}
+    \pi_0 \xrightarrow{\mathbb{E}} v_{\pi_0} \xrightarrow{I} \pi_1 \xrightarrow{\mathbb{E}} v_{\pi_1} \xrightarrow{I} \pi_2
+ \xrightarrow{\mathbb{E}}\dots \xrightarrow{I}.
+ \end{equation}
+This is done until the value function stops changing. \\
+\textbf{Value iteration}: Another GPI algorithm.\\
+\\
+
+\subsubsection{Monte Carlo Methods}
+In dynamic programming, it is assumed that there is perfect knowledge of the environment. When such a model is unavailable or impractical to obtain, Monte Carlo methods provide an alternative approach based solely on sampled experience. 
+\\\\
+Monte Carlo methods are model-free and rely on observed episodes consisting of states, actions, and rewards. Instead of using a known model, these methods estimate value functions by computing sample averages of returns, thereby approximating expected future rewards (\cite{sutton2018reinforcement}, p.91). The update rule when using Monte Carlo methods can be seen bellow: 
+
+\begin{equation}
+    Q(S_{t}, A_{t}) \xleftarrow{} Q(S_{t}, A_{t}) + \alpha(G_{t} - Q(S_{t}, A_{t}))
+    \label{eq: Monte Carlo for Q function}
+\end{equation}
+where $\alpha \in (0,1]$ is a constant parameter. In Monte Carlo methods the update is performed after an episode is completed.
+
+
+\subsubsection{On- and Off-Policy methods}
+In reinforcement learning, the difference between on-policy and off-policy methods lies in the relationship between the policy used to generate the data  and the policy being evaluated/improved. In on-policy learning, the agent evaluates and improves the same policy that it uses to interact with the environment. Consequently, learning is based directly on the actions taken by the current policy. In contrast, off-policy learning separates these roles by allowing the agent to learn about one policy, referred to as the target policy, while following a different policy, known as the behavior policy, to generate data. This separation makes the methods more powerful and general, but the downside is that they are often of greater variance and are slower to converge (\cite{sutton2018reinforcement}, p.103).
+
+\subsubsection{Temporal Difference Learning}
+
+GPI has two components, evaluation and improvement. The adjustment is within evaluation, where we 
+\begin{itemize}
+    \item We may study an MRP (markov reward process) over an MDP (markov decition process)
+    \item We may reference to V(s) instead of Q(s,a) 
+\end{itemize}
+TD is an adjusted version of Monte Carlo. The disabling feature of monte carlo is that an episode must be completed before the values can be updated. If an episode is long, learning might be slow. \\
+\\
+\textbf{n-step TD:} In eq \ref{eq: Monte Carlo for Q function}, replace $G_t$ with $$R_{t+1}+Q(S_{t+1}A_{t+1})$$ with first observation at $t+1$. (\cite{cao2020deephedging} p.7 eq 3) 
+
+\begin{itemize}
+    \item $n=1$: values update on a single reward. 
+    \item $n = \infty $:is identical to MC.
+\end{itemize}
+
+TD's criteria: maximum likelihood of the Markov reward process. MD's criteria: Minimize the mean square error. 
+
+\textbf{On policy TD control:} n-step SARSA: State,action, rewards, state action. 
+
+
+\subsubsection{Q-learning}\label{sec:Q-learning}
+from 1-step TD control the primary adjustment is to the target. 
+1 step TD: $$r_{t+1}^m + \gamma Q(s_{t+1}^m, a_{t+1}^m)$$
+
+$$r_{t+1}^m + \gamma Max_a Q(s_{t+1}^m, a)$$
+The max operator means that this is off-policy. 
+
+
+
+
+\subsubsection{Function Approximation}
+In many reinforcement learning problems, the state or action spaces are too large to allow for an exact tabular representation of value functions. In such cases, function approximation is used to generalize value estimates across states or state–action pairs. Instead of storing separate estimates for each state, a parameterized function is employed to represent the value function. Formally, the value function is approximated as $\hat{v}=(s,w)$ or $\hat{q}=(s,a,w)$, where w denotes a vector of adjustable parameters. These parameters are updated using data obtained through interaction with the environment, enabling the agent to improve its estimates even for previously unvisited states. Function approximation can be implemented using for example neural networks (\cite{sutton2018reinforcement}, p.197). 
+
+\subsubsection{Policy Gradient Methods}
+"Directly using arg max() to determine a policy is suitable when the action space is discrete and not too large. However, when the action space is continuous, this method becomes impractical as it involves a global maximization at every step. An alternative approach, known as policy gradients, learns the optimal policy directly. The basic idea is to represent the policy by a parametric function $\pi(St; \theta)$, where $\theta$ is the parameter vector. Learning is then done through exploring the environment and adjusting the policy parameters in the direction of greater action values. " (\cite{cao2020deephedging}, page 6)
+
+
+\subsection{Actor Critic}
+Actor-critic combines both Policy-based methods(Learning straight from a policy) and Value-based methods(Leaning a value function). \\
+\\
+Actor-critic is a Temporal difference version of policy gradients. It is two networks, the actor and the critic, where the actor takes the decisions and the critic validates them.
+The actor represents the policy and decides what action to take, i.e $\pi_\theta(a|s)$, and is updated to make better decisions. The critic on the other hand is validating how well the actor performed by either using the value function, $V^\pi(s)$ or the action-value function $Q^\pi(s,a)$ and it is calculating the TD-error. 
+
+
+\begin{equation}
+    \delta_t = R_{t+1} + \gamma V(s') -V(s)
+\end{equation}
+(p.121, eq 6.5, \cite{sutton2018reinforcement}). The TD error is updating the actor in the direction that will maximize the reward, weighted by $\delta$.
+
+ 
+\subsection{Target Networks}
+A copy of the neural network that is used in the learning phase to improve stability (critic?) 
+
+
+\subsection{Neural Networks}\label{sec:Neural networks}
+Used in the acting space, takes in an observation and outputs a reward(?).\\
+\\
+Neural networks have the form 
+
+\begin{equation}
+    f(X) = \beta_0 + \sum_{k=1}^K \beta_k h_k(X) = 
+    f(X) = \beta_0 + \sum_{k=1}^K \beta_k g(w_{k0} + \sum_{j=1}^p w_{kj}X_j) 
+\end{equation}
+(eq.10.1, p.400, \cite{An_introduction_to_statitical_learning2023})
+
+the $K$ activations, $A_k$, $k= 1, \dots. K$ in the hidden layer are computed as functions of the features $X_1, \dots, X_p$ 
+
+\begin{equation}
+    A_k = h_k(X) = g(w_{k0} + \sum_{j=1}^p w_{kj} X_j)
+\end{equation}
+(eq.10.2, p.400, \cite{An_introduction_to_statitical_learning2023})
+where $g(z)$ is a non-linear activation function specified in advance. 
+
+\subsubsection{Activation function}
+\textbf{Sigmoid:} early instances of NN then this var favored, with probabilities between zero and one. 
+\begin{equation}
+    g(z) = \frac{e^z}{1 + e^z} = \frac{1}{1 + e^{-z}}
+\end{equation}
+(eq.10.4, p.401, \cite{An_introduction_to_statitical_learning2023})
+
+\textbf{ReLU:}
+
+
+\subsection{Replay Buffer}
+A list of all the data that the agent has seen and done so far, the experience replay buffer 
+
+\subsection{Ensemble learning}
+The main idea behind ensemble learning is that a prediction is better when you aggregate the predictions of a group rather than letting the best individual predictor determine the action. The group prediction is termed an ensemble (\cite{Hands_on_machine_learning_with_Scikit-Learn}, p.189). The benefit of using ensemble learning is more robust result. To demonstrate the One often speak off the bias-variance trade off 
+
+
+
+\subsection{Deep Q-Networks (DQN)}
+Deep Q-Networks combine classic Q-learning \ref{sec:Q-learning} with neural networks \ref{sec:Neural networks} to approximate the value function. An MDP where an agent is interacting over discrete time steps. and by every state, the agent 
+\begin{itemize}
+    \item DQN is off policy, following ex epsilon greedy 
+    \item using replay buffer
+    \item  don't use actor-critic, but a neural network
+    \item have a target network to stabilize the learning
+    \item use discrete time steps. 
+\end{itemize}
+
+\subsection{DDGP}
+The reinforcement learning agent is trained using the DDPG algorithm, which combines temporal difference learning and policy gradients. The critic network estimates the Q-function using TD targets, while the actor network is updated through deterministic policy gradients (\cite{cao2020deephedging}, p.10-11). 
+
+\subsection{Twin Delayed Deep Deterministic Policy Gradient (TD3)}
+The twin delayed deep deterministic policy gradient (TD3) also uses an actor critic approach, as the DDGP agent, but this algorithm includes some adjustments. The aim of TD3 is to fix some of the issues in the deep deterministic policy gradient. This algorithm handles these issues with 3 main adjustments: clipped double Q-learning, target policy smoothing, and delayed policy updates. Clipped double learning means that two critics are used to estimate the q-function. The agent will use the lowest of the two q-values, which will help with overestimation. Target smoothing also aims to reduce overestimation, which is done by adding random noise to the target action when updating the policy. Delayed policy updates are used to address instability and this is done by updating the policy network less frequently than value networks \footnote{https://medium.com/@joanna.z.gryczka/td3-tutorial-and-implementation-682f16b56699}.
+
+
+
+\subsection{Ornstein-Uhlebeck noise}
+With ornstrin uhlebeck the ddpg agent  became much better :)
+
+
+
+\section{Application for Reinforcement Learning in Hedging}
+This section connects reinforcement learning to it's application in hedging. 
+\\\\
+As introduced in Section \ref{sec:Reinforcement learning}, reinforcement learning involves an agent interacting with an environment in a sequential decision-making setting. At each time step, the agent observes the current state, selects an action, transitions to a new state, and receives a reward that reflects the quality of the chosen action.
+\\\\
+In our setting, the state is characterized by three variables: moneyness (defined as the spot price divided by the strike price), time to maturity, and the current position, i.e., the amount of the underlying asset held. The action corresponds to the hedge ratio, which takes a continuous value between 0 and 1. The reward is defined in terms of the portfolio’s profit and loss, which will be described in detail in the following section. 
+
+\subsection{Accounting Profit and Loss Formulation}
+Rewards when using accounting profit and loss, is given by the following equation (\cite{cao2020deephedging}, p.11)
+
+\begin{equation}
+    R_{i+1} = V_{i+1} - V_i + H_i (S_{i+1} - S_i) - \kappa \lvert S_i (H_{i+1} - H_i) \rvert,
+\qquad 0 \le i < n,
+\end{equation}
+"where \(S_i\) is the asset price at the beginning of period \(i\), \(H_i\) is the holding between 
+time \(i\Delta t\) and \((i+1)\Delta t\), \(\kappa\) is the trading cost as a proportion of the value of 
+what is bought or sold, and \(V_i\) is the value of the derivative position at the beginning of 
+period \(i\). (\(V_i\) is negative in the case of a short call option position). In addition, there is an initial reward associated with setting up the hedge equal to
+\[
+-\kappa \lvert S_0 H_0 \rvert
+\]
+and a final reward associated with liquidating the hedge at the end equal to
+\[
+-\kappa \lvert S_n H_n \rvert .
+\]"
+
+\subsection{Geometric Brownian Motion}
+The underlying asset is simulated using a stochastic process called Geometric Brownian Motion.
+\[
+dS = \mu S\, dt + \sigma S\, dz
+\]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Methodology and results
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+
+
+
+\section{Methodology and Results}\label{sec:Results}
+
+\subsection{Deep Deterministic Policy Gradient (DDPG)}\label{sec:Method DDPG}
+
+\subsection{TD3}\label{sec:Method TD3}
+
+\subsection{Deep Q-Network (DQN)}\label{sec:Method DQN}
+It may or may not make sense to split this section into two. The most important thing is that your thesis has 
+\enquote{a clear red thread with no loose ends}. This means that you should only include what is necessary for the outcome of your thesis and the structure should be such that everything leads to your results. If you need some results, which are not really fitting into the main body of your thesis but you need them to explain certain aspects, then place them in the appendix. A good example for this could be a mathematical theorem you need to apply somewhere, which is not fitting into your theory section.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Conclusion
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}\label{sec:Conclusion}
+%% Summary
+\todo{summary}
+%% Conclusion
+\todo{conclusion/ answer research questions}
+%% Limitations and future research
+\todo{Limitations and future research}
+
+When you submit your thesis, please include the linenumbers by using the package \\\verb+\usepackage[pagewise]{lineno}+ and 
+activate it with the \verb+\linenumbers+ command. This makes the review process easier.
+
+For the final version you will upload to the file server, please remove the linenumbers by commenting out the 
+\verb+\linenumbers+ command.
+
+Please have a look at the guide for receiving a review and how to respond to it next.
+
+\begin{table}[]
+    \centering
+    \begin{tabular}{l|l|l|l|l}
+                                          &    BSM    &   DDPG     &   DQN      &  TD3 \\
+                                          \hline
+Average Hedge Cost (\% of Option Price)  & 90.447659 & 53.478604 & 35.375203 & 51.579402 \\
+STD Hedge Cost (\% of Option Price)      &35.595953 & 37.884597 & 55.680849 & 35.320559
+    \end{tabular}
+    \caption{Caption}
+    \label{tab:placeholder}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Appendix
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\appendix
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Bibliography
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \nocite{*}
+\printbibliography
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Code
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Code}\label{sec:Code}
+In this section, we will provide the code for this thesis written in \python.
+First, in \Cref{sec:Code_HelloWorld} we provide the code used in \Cref{sec:?}. This,
+is followed in \Cref{sec:?} by \dots 
+
+\subsection{Hello World}\label{sec:Code_HelloWorld}
+\begin{minted}{python3}
+    print('Hello World')
+\end{minted}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Further Experiments
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Further Experiments}\label{sec:FurtherExperiments}
+If you have done extensive testing but do not want to include all of them in the main body of the thesis, then you can place them in the appendix and refer to them in the main body.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Declarations
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Confidentiality}
+The authors have no relevant confidentiality agreements to disclose.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Declarations
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Declarations}
+The authors have no relevant financial or non-financial interests to disclose.
+
+
+
+\end{document}
+
