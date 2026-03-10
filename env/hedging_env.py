@@ -45,6 +45,9 @@ class HedgingEnv:
         ttm_prev = self.maturity
         pos_prev = self.initPosition
         spot_prev = self.spot
+        # Nollställa
+        step_reward = 0
+        reward = 0
 
         # GBM
         spot_next = spot_prev * ((1 + self.mu * self.dT) + (np.random.randn() * self.vol) * np.sqrt(self.dT))
