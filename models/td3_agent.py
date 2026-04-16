@@ -47,10 +47,12 @@ class TD3Agent:
 
             self.actor.train()
             
-            if train:    #nu är noise här istället för i train ddpg
+            if train:    # nu är noise här istället för i train ddpg
                 action = np.clip(action + self.noise()[0], 0.0, 1.0)
 
             return action
+    
+
         
     def reset_noise(self):
         self.noise.reset()
