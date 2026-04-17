@@ -60,23 +60,24 @@ hybrid_agent = HybridAgent(dqn_agent, td3_agent, actions_list)
 # Stopping criterion
 score_window_lenght = 200
 stop_avg_reward = 0
-episodes = 200
+episodes = 500
 
 # Variables to add noise (increase exploration)
 noise_scale = 0.2 
 noise_decay =  0.9995
 min_noise = 0.01
 
+episode_rewards_HYBRID = train_hybrid(episodes, env, hybrid_agent, batch_size, score_window_lenght, stop_avg_reward)
+
 # Train without ou noise
 #episode_rewards_DDPG = train_RL(episodes, env, ddpg_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
 #episode_rewards_TD3 = train_RL(episodes, env, td3_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
 
 # Train with ou noise
-episode_rewards_DDPG = train_DDPG_TD3(episodes, env, ddpg_agent, batch_size, score_window_lenght, stop_avg_reward)
 episode_rewards_TD3 = train_DDPG_TD3(episodes, env, td3_agent, batch_size, score_window_lenght, stop_avg_reward)
+episode_rewards_DDPG = train_DDPG_TD3(episodes, env, ddpg_agent, batch_size, score_window_lenght, stop_avg_reward)
 
 episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
-episode_rewards_HYBRID = train_hybrid(episodes, env, dqn_agent, td3_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
 
 # Cost function
 n_trails = 1000
@@ -137,30 +138,42 @@ def policy_DQN(mR, TTM, Pos):
 
     return actions_list[action_index]
 
-
 def policy_Hybrid(mR, TTM, Pos):
-    # Tillstånd för agenterna
     state = np.stack([mR, TTM, Pos], axis=1)
     state_tensor = torch.tensor(state, dtype=torch.float32)
-
     with torch.no_grad():
-        # 1. DQN väljer bin-index
-        action_index = dqn_agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
+        bin_idx = dqn_agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
+        raw_td3 = td3_agent.actor(state_tensor).cpu().numpy().squeeze()
+    lower = actions_list[bin_idx]
+    upper = np.where(bin_idx + 1 < len(actions_list),
+                     actions_list[np.minimum(bin_idx + 1, len(actions_list)-1)],
+                     1.0)
+    return np.clip(lower + raw_td3 * (upper - lower), 0.0, 1.0)
+
+
+# def policy_Hybrid(mR, TTM, Pos):
+#     # Tillstånd för agenterna
+#     state = np.stack([mR, TTM, Pos], axis=1)
+#     state_tensor = torch.tensor(state, dtype=torch.float32)
+
+#     with torch.no_grad():
+#         # 1. DQN väljer bin-index
+#         action_index = dqn_agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
         
-        # 2. TD3 väljer finjusterat värde (0 till 1)
-        raw_td3_action = td3_agent.actor(state_tensor).cpu().numpy().squeeze()
+#         # 2. TD3 väljer finjusterat värde (0 till 1)
+#         raw_td3_action = td3_agent.actor(state_tensor).cpu().numpy().squeeze()
 
-    # Identifiera nedre och övre gräns för valda bins
-    lower_bound = actions_list[action_index]
-    # Beräkna övre gräns (nästföljande värde i actions_list eller 1.0)
-    upper_bound = np.where(action_index + 1 < len(actions_list), 
-                           actions_list[np.minimum(action_index + 1, len(actions_list)-1)], 
-                           1.0)
+#     # Identifiera nedre och övre gräns för valda bins
+#     lower_bound = actions_list[action_index]
+#     # Beräkna övre gräns (nästföljande värde i actions_list eller 1.0)
+#     upper_bound = np.where(action_index + 1 < len(actions_list), 
+#                            actions_list[np.minimum(action_index + 1, len(actions_list)-1)], 
+#                            1.0)
 
-    # Skala TD3-action till DQN-intervall
-    final_action = lower_bound + (raw_td3_action * (upper_bound - lower_bound))
+#     # Skala TD3-action till DQN-intervall
+#     final_action = lower_bound + (raw_td3_action * (upper_bound - lower_bound))
     
-    return final_action 
+#     return final_action 
 
 
 # Calculate the cost
