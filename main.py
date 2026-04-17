@@ -60,7 +60,7 @@ hybrid_agent = HybridAgent(dqn_agent, td3_agent, actions_list)
 # Stopping criterion
 score_window_lenght = 200
 stop_avg_reward = 0
-episodes = 500
+episodes = 200
 
 # Variables to add noise (increase exploration)
 noise_scale = 0.2 
