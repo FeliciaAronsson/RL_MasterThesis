@@ -9,12 +9,12 @@ from env.hedging_env import HedgingEnv
 from utils.policy import Policy
 from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
+from utils.print import plot_learningcurve, plot_histogram, print_hedge_table, plot_learningcurve_DDPG, plot_learningcurve_DQN, plot_learningcurve_TD3, plot_learningcurve_hybrid, plot_policy_heatmap, plot_hedge_trajectory, plot_hybrid_decomposition
 
 #from utils.policy import policy_BSM, policy_RL
-from train.train_DDPG_TD3 import train_RL, train_ou
+from train.train_DDPG_TD3 import train_DDPG_TD3
 from train.train_DQN import train_DQN
 from train.train_hybrid import train_hybrid
-from utils.print import plot_learningcurve, plot_histogram, print_hedge_table, plot_learningcurve_DDPG, plot_learningcurve_DQN, plot_learningcurve_TD3, plot_learningcurve_hybrid, plot_policy_heatmap, plot_hedge_trajectory, plot_hybrid_decomposition
 
 # Agents 
 from models.dqn_agent import DQNAgent
@@ -84,10 +84,10 @@ min_noise = 0.01
 #episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window, stop_avg_reward)
 
 # Train with ou noice
-#episode_rewards_DDPG = train_ou(episodes, env, ddpg_agent, batch_size, score_window_lenght, stop_avg_reward)
-#episode_rewards_TD3 = train_ou(episodes, env, td3_agent, batch_size, score_window_lenght, stop_avg_reward)
+episode_rewards_DDPG = train_DDPG_TD3(episodes, env, ddpg_agent, batch_size, score_window_lenght, stop_avg_reward)
+#episode_rewards_TD3 = train_DDPG_TD3(episodes, env, td3_agent, batch_size, score_window_lenght, stop_avg_reward)
 #episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
-episode_rewards_HYBRID = train_hybrid(episodes, env, dqn_agent, td3_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
+#episode_rewards_HYBRID = train_hybrid(episodes, env, dqn_agent, td3_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
 
 
 # Cost function
@@ -179,13 +179,13 @@ def policy_Hybrid(mR, TTM, Pos):
 
 
 
-# Calc cost
+# Calculate the cost
 
 #Cost_DQN = compute_cost(policy_DQN,  n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
 Cost_BSM = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-#Cost_DDPG = compute_cost(policy_DDPG, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+Cost_DDPG = compute_cost(policy_DDPG, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
 #Cost_TD3 = compute_cost(policy_TD3,  n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-Cost_hybrid = compute_cost(policy_Hybrid, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
+#Cost_hybrid = compute_cost(policy_Hybrid, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
 
 OptionPrice = bs_price(spot, strike, r, maturity, vol)
 
@@ -195,13 +195,13 @@ OptionPrice = bs_price(spot, strike, r, maturity, vol)
 #print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
 #plot_histogram(Cost_DDPG, Cost_DQN, Cost_TD3, Cost_BSM)
 #plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN, episode_rewards_TD3)
-#plot_learningcurve_DDPG(episode_rewards_DDPG)
+plot_learningcurve_DDPG(episode_rewards_DDPG)
 #plot_learningcurve_DQN(episode_rewards_DQN)
 #plot_learningcurve_TD3(episode_rewards_TD3)
-plot_learningcurve_hybrid(episode_rewards_HYBRID) #, episode_rewards_DQN, episode_rewards_TD3)
+#plot_learningcurve_hybrid(episode_rewards_HYBRID) #, episode_rewards_DQN, episode_rewards_TD3)
 
 
 #VÄldigt oklart men det sker någonting iallafall..........
-plot_policy_heatmap(dqn_agent, td3_agent, actions_list, maturity, strike)
-plot_hedge_trajectory(env, dqn_agent, td3_agent, actions_list, bs_delta)
-plot_hybrid_decomposition(dqn_agent, td3_agent, actions_list)
+#plot_policy_heatmap(dqn_agent, td3_agent, actions_list, maturity, strike)
+#plot_hedge_trajectory(env, dqn_agent, td3_agent, actions_list, bs_delta)
+#plot_hybrid_decomposition(dqn_agent, td3_agent, actions_list)

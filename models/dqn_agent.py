@@ -31,7 +31,7 @@ class DQNAgent:
     def select(self, state, train = True):
 
         if train and np.random.random() < self.epsilon_start:
-            return np.random.randint(0, self.act_dim - 1)
+            return np.random.randint(0, self.act_dim)
         
         
         with torch.no_grad():

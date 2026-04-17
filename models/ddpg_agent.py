@@ -5,7 +5,7 @@ from models.actor import Actor
 from models.critic import Critic
 from utils.replay_buffer import ReplayBuffer
 import numpy as np
-from utils.ou_noice import OUNoice
+from utils.ou_noise import OUNoise
 
 class DDPGAgent:
     def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate):
@@ -27,11 +27,11 @@ class DDPGAgent:
         self.opt_critic = optim.Adam(self.critic.parameters(), lr= learnRate)
 
         self.buffer = ReplayBuffer()
-        self.noise = OUNoice(mu = np.zeros(act_dim))
+        self.noise = OUNoise(mu = np.zeros(act_dim))
 
 
-    def select_ou(self, state, train = True):
-
+    def select(self, state, train = True):
+        # The select function uses OU-noise to be off policy
         self.actor.eval()
 
         with torch.no_grad():
@@ -46,7 +46,7 @@ class DDPGAgent:
 
         
 
-    def select(self, state, noise_scale):
+    def select_no_ou_noise(self, state, noise_scale):
         with torch.no_grad():
             action = self.actor(torch.tensor(state).float().unsqueeze(0)).item()
 
