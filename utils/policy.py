@@ -6,11 +6,11 @@ import numpy as np
 
 class Policy():
 
-    def __init__(self, agent, strike, vol, r, actions_list):
+    def __init__(self, agent, strike, vol, rate, actions_list):
 
         self.strike = strike
         self.vol = vol
-        self.rate = r
+        self.rate = rate
         self.agent = agent
         self.actions_list = actions_list
 
@@ -28,7 +28,7 @@ class Policy():
         """
         
         S = mR * self.strike
-        return bs_delta(S, self.strike, self.r, TTM, self.vol)
+        return bs_delta(S, self.strike, self.rate, TTM, self.vol)
 
 
     def policy_RL(self, mR, TTM, Pos): 
@@ -58,3 +58,4 @@ class Policy():
             action_index = self.agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
 
         return self.actions_list[action_index]
+    

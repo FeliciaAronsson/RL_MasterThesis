@@ -1,4 +1,5 @@
 import numpy as np
+from collections import deque
 
 def train_DQN(episodes, env, agent, batch_size, actions_list, score_window, stop_avg_reward):
     """
@@ -15,6 +16,7 @@ def train_DQN(episodes, env, agent, batch_size, actions_list, score_window, stop
     """
 
     all_episode_rewards = []
+    score_window = deque(maxlen=200) 
 
     # Training
     for episode in range(episodes):

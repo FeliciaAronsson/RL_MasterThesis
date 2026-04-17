@@ -1,4 +1,5 @@
 import numpy as np
+from collections import deque
 
 
 def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward):
@@ -52,10 +53,10 @@ def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
 
     return all_episode_rewards
 
-import numpy as np
 
 
-def train_ou(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward):
+
+def train_DDPG_TD3(episodes, env, agent, batch_size, score_window_lenght, stop_avg_reward):
     """
     Training the enviroment
     
@@ -70,7 +71,7 @@ def train_ou(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
     """
 
     all_episode_rewards = []
-
+    score_window = deque(maxlen=score_window_lenght) 
     # Training
     for episode in range(episodes):
         state = env.reset()
@@ -80,7 +81,8 @@ def train_ou(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
         
         # Run until time to maturity is reached
         while not done:
-            action = agent.select_ou(state)
+            # 
+            action = agent.select(state)
             reward, next_state, done = env.step(action)
             
             agent.buffer.add(state, action, reward, next_state, done)
@@ -105,3 +107,4 @@ def train_ou(episodes, env, agent, batch_size, min_noise, noise_scale, noise_dec
             break
 
     return all_episode_rewards
+

@@ -5,7 +5,7 @@ from models.critic import Critic
 from utils.replay_buffer import ReplayBuffer
 import numpy as np
 import torch.nn.functional as F
-from utils.ou_noice import OUNoice
+from utils.ou_noise import OUNoise
 
 class TD3Agent:
     def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate, 
@@ -33,12 +33,12 @@ class TD3Agent:
         self.critic_target2.load_state_dict(self.critic2.state_dict())
 
         self.opt_critic = optim.Adam(list(self.critic1.parameters()) + list(self.critic2.parameters()), lr = learnRate)
-        self.noise = OUNoice(mu = np.zeros(act_dim))
+        self.noise = OUNoise(mu = np.zeros(act_dim))
 
         # Replay buffer
         self.buffer = ReplayBuffer()
 
-    def select_ou(self, state, train = True):
+    def select(self, state, train = True):
 
             self.actor.eval()
 
@@ -47,16 +47,18 @@ class TD3Agent:
 
             self.actor.train()
             
-            if train:    #nu är noise här istället för i train ddpg
+            if train:    # nu är noise här istället för i train ddpg
                 action = np.clip(action + self.noise()[0], 0.0, 1.0)
 
             return action
+    
+
         
     def reset_noise(self):
         self.noise.reset()
 
 
-    def select(self, s, noise_scale):
+    def select_no_ou_noise(self, s, noise_scale):
         with torch.no_grad():
             action = self.actor(torch.tensor(s).float().unsqueeze(0)).item()
 
