@@ -8,6 +8,15 @@ import torch.nn.functional as F
 from utils.ou_noise import OUNoise
 
 class TD3Agent:
+    """
+    The TD3Agent class implements the Twin Delayed Deep Deterministic Policy Gradient (TD3) algorithm for continuous action spaces.
+    It consists of an Actor network that learns the policy and two Critic networks that estimate the Q-values. 
+    The agent also includes target networks for the Actor and both Critics to stabilize training, a replay buffer to store transitions, 
+    and an Ornstein-Uhlenbeck process for adding noise to the actions during training.
+    TD3 addresses the overestimation bias of DDPG by using two Critic networks and taking the minimum of the two Q-value estimates for the target, 
+    and it also delays policy updates to further stabilize training.
+    """
+
     def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate, 
                  policy_noise = 0.2, noise_clip = 0.5, policy_delay = 2):
         self.tau = tau
@@ -35,11 +44,12 @@ class TD3Agent:
         self.opt_critic = optim.Adam(list(self.critic1.parameters()) + list(self.critic2.parameters()), lr = learnRate)
         self.noise = OUNoise(mu = np.zeros(act_dim))
 
-        # Replay buffer
         self.buffer = ReplayBuffer()
+    
+    def __str__(self):
+        return "TD3"
 
     def select(self, state, train = True):
-
             self.actor.eval()
 
             with torch.no_grad():
@@ -47,13 +57,11 @@ class TD3Agent:
 
             self.actor.train()
             
-            if train:    # nu är noise här istället för i train ddpg
+            if train: 
                 action = np.clip(action + self.noise()[0], 0.0, 1.0)
 
             return action
-    
-
-        
+      
     def reset_noise(self):
         self.noise.reset()
 
@@ -62,7 +70,6 @@ class TD3Agent:
         with torch.no_grad():
             action = self.actor(torch.tensor(s).float().unsqueeze(0)).item()
 
-            # Noise
             if noise_scale > 0.0:
                 action += np.random.normal(0, noise_scale)
         

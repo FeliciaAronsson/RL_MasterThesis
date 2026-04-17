@@ -2,18 +2,6 @@ import numpy as np
 from collections import deque
 
 def train_DQN(episodes, env, agent, batch_size, actions_list, score_window, stop_avg_reward):
-    """
-    Training the enviroment
-    
-    :param episodes: Description
-    :param env: Description
-    :param agent: Description
-    :param batch_size: Description
-    :param min_noise: Description
-    :param noise_decay: Description
-    :param score_window: Description
-    :param stop_avg_reward: Description
-    """
 
     all_episode_rewards = []
     score_window = deque(maxlen=200) 

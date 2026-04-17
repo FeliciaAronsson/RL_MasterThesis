@@ -1,6 +1,4 @@
-import torch 
 import torch.nn as nn 
-import torch.nn.functional as F
 
 class QNetwork(nn.Module):
     def __init__(self, obs_dim, act_dim, hidden_dim):

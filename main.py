@@ -85,7 +85,7 @@ min_noise = 0.01
 
 # Train with ou noice
 episode_rewards_DDPG = train_DDPG_TD3(episodes, env, ddpg_agent, batch_size, score_window_lenght, stop_avg_reward)
-#episode_rewards_TD3 = train_DDPG_TD3(episodes, env, td3_agent, batch_size, score_window_lenght, stop_avg_reward)
+episode_rewards_TD3 = train_DDPG_TD3(episodes, env, td3_agent, batch_size, score_window_lenght, stop_avg_reward)
 #episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
 #episode_rewards_HYBRID = train_hybrid(episodes, env, dqn_agent, td3_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
 
@@ -195,13 +195,15 @@ OptionPrice = bs_price(spot, strike, r, maturity, vol)
 #print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
 #plot_histogram(Cost_DDPG, Cost_DQN, Cost_TD3, Cost_BSM)
 #plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN, episode_rewards_TD3)
-plot_learningcurve_DDPG(episode_rewards_DDPG)
+#plot_learningcurve_DDPG(episode_rewards_DDPG)
 #plot_learningcurve_DQN(episode_rewards_DQN)
 #plot_learningcurve_TD3(episode_rewards_TD3)
-#plot_learningcurve_hybrid(episode_rewards_HYBRID) #, episode_rewards_DQN, episode_rewards_TD3)
+plot_learningcurve_hybrid(episode_rewards_HYBRID) #, episode_rewards_DQN, episode_rewards_TD3)
 
 
 #VÄldigt oklart men det sker någonting iallafall..........
 #plot_policy_heatmap(dqn_agent, td3_agent, actions_list, maturity, strike)
 #plot_hedge_trajectory(env, dqn_agent, td3_agent, actions_list, bs_delta)
 #plot_hybrid_decomposition(dqn_agent, td3_agent, actions_list)
+
+print("Done!")

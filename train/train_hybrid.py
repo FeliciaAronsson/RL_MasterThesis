@@ -1,6 +1,5 @@
 from collections import deque
 import numpy as np
-import torch
 
 def train_hybrid(episodes, env, dqn_agent, td3_agent, batch_size, actions_list, score_window, stop_avg_reward):
     """
@@ -25,7 +24,7 @@ def train_hybrid(episodes, env, dqn_agent, td3_agent, batch_size, actions_list, 
             
             # 2. TD3 selects a value in [0, 1]
             # Using the actor network from your td3_agent.py
-            raw_td3_action = td3_agent.select_ou(state)
+            raw_td3_action = td3_agent.select(state)
             
             # 3. Combine: Rescale TD3 output into the DQN bin
             # Final Action = Lower + (Relative_Pos * Width)
@@ -59,6 +58,7 @@ def train_hybrid(episodes, env, dqn_agent, td3_agent, batch_size, actions_list, 
             break
 
     return all_episode_rewards
+
 def train_hybrid1(episodes, env, hybrid_agent, batch_size, actions_list, score_window, stop_avg_reward): 
 
 

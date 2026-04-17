@@ -8,6 +8,12 @@ import numpy as np
 from utils.ou_noise import OUNoise
 
 class DDPGAgent:
+    """
+    The DDPGAgent class implements the Deep Deterministic Policy Gradient (DDPG) algorithm for continuous action spaces.
+    It consists of an Actor network that learns the policy and a Critic network that estimates the Q-values. 
+    The agent also includes target networks for both the Actor and Critic to stabilize training, a replay buffer to store transitions, ¨
+    and an Ornstein-Uhlenbeck process for adding noise to the actions during training."""
+
     def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate):
         self.tau = tau
         self.gamma = gamma
@@ -29,6 +35,9 @@ class DDPGAgent:
         self.buffer = ReplayBuffer()
         self.noise = OUNoise(mu = np.zeros(act_dim))
 
+    def __str__(self):
+        return "DDPG"
+
 
     def select(self, state, train = True):
         # The select function uses OU-noise to be off policy
@@ -39,18 +48,16 @@ class DDPGAgent:
 
         self.actor.train()
         
-        if train:    #nu är noise här istället för i train ddpg
+        if train: 
             action = np.clip(action + self.noise()[0], 0.0, 1.0)
 
         return action
 
         
-
     def select_no_ou_noise(self, state, noise_scale):
         with torch.no_grad():
             action = self.actor(torch.tensor(state).float().unsqueeze(0)).item()
 
-            # Noise
             if noise_scale > 0.0:
                 action += np.random.normal(0, noise_scale)
 
