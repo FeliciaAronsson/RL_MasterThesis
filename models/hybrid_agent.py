@@ -11,6 +11,7 @@ class HybridAgent:
 
 
     def select(self, state):
+        """Används aldrig, men tanken är att den ska kombinera DQN:s diskreta val med TD3:s finjustering."""
         # 1. Få grov-intervallet från DQN
         # Vi antar att dqn.select returnerar indexet för handlingen
         dqn_action_idx = self.dqn.select(state)
