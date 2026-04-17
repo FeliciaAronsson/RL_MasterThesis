@@ -1,10 +1,10 @@
 import numpy as np
 from collections import deque
 
-def train_DQN(episodes, env, agent, batch_size, actions_list, score_window, stop_avg_reward):
+def train_DQN(episodes, env, agent, batch_size, actions_list, score_window_length, stop_avg_reward):
 
     all_episode_rewards = []
-    score_window = deque(maxlen=200) 
+    score_window = deque(maxlen=score_window_length) 
 
     for episode in range(episodes):
         state = env.reset()

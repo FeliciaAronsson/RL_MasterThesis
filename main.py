@@ -1,4 +1,3 @@
-
 import numpy as np
 import torch 
 
@@ -11,7 +10,7 @@ from utils.print import plot_learningcurve, plot_histogram, print_hedge_table, p
 
 from train.train_DDPG_TD3 import train_DDPG_TD3
 from train.train_DQN import train_DQN
-from train.train_hybrid import train_hybrid
+from train.train_hybrid import *
 
 from models.dqn_agent import DQNAgent
 from models.td3_agent import TD3Agent
@@ -51,11 +50,15 @@ action_dimension = len(actions_list)
 # Define enviroment and agent
 env = HedgingEnv(spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r)
 
+# Hybrid Agent
+hybrid_dqn = DQNAgent(state_dim, action_dimension, hidden_dim, tau, gamma, learnRate)
+hybrid_td3 = TD3Agent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
+hybrid_agent = HybridAgent(hybrid_dqn, hybrid_td3, actions_list)
+
 # Agents
 ddpg_agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
 dqn_agent = DQNAgent(state_dim, action_dimension, hidden_dim, tau, gamma, learnRate)
 td3_agent = TD3Agent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
-hybrid_agent = HybridAgent(dqn_agent, td3_agent, actions_list)
 
 # Stopping criterion
 score_window_lenght = 200
@@ -67,17 +70,17 @@ noise_scale = 0.2
 noise_decay =  0.9995
 min_noise = 0.01
 
-episode_rewards_HYBRID = train_hybrid(episodes, env, hybrid_agent, batch_size, score_window_lenght, stop_avg_reward)
-
 # Train without ou noise
 #episode_rewards_DDPG = train_RL(episodes, env, ddpg_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
 #episode_rewards_TD3 = train_RL(episodes, env, td3_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
 
 # Train with ou noise
+episode_rewards_HYBRID = train_hybrid(episodes, env, hybrid_agent, batch_size, score_window_lenght, stop_avg_reward)
 episode_rewards_TD3 = train_DDPG_TD3(episodes, env, td3_agent, batch_size, score_window_lenght, stop_avg_reward)
 episode_rewards_DDPG = train_DDPG_TD3(episodes, env, ddpg_agent, batch_size, score_window_lenght, stop_avg_reward)
 
 episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
+
 
 # Cost function
 n_trails = 1000
@@ -142,8 +145,8 @@ def policy_Hybrid(mR, TTM, Pos):
     state = np.stack([mR, TTM, Pos], axis=1)
     state_tensor = torch.tensor(state, dtype=torch.float32)
     with torch.no_grad():
-        bin_idx = dqn_agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
-        raw_td3 = td3_agent.actor(state_tensor).cpu().numpy().squeeze()
+        bin_idx = hybrid_dqn.qnet(state_tensor).argmax(dim=1).cpu().numpy()
+        raw_td3 = hybrid_td3.actor(state_tensor).cpu().numpy().squeeze()
     lower = actions_list[bin_idx]
     upper = np.where(bin_idx + 1 < len(actions_list),
                      actions_list[np.minimum(bin_idx + 1, len(actions_list)-1)],
