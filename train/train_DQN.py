@@ -6,7 +6,6 @@ def train_DQN(episodes, env, agent, batch_size, actions_list, score_window, stop
     all_episode_rewards = []
     score_window = deque(maxlen=200) 
 
-    # Training
     for episode in range(episodes):
         state = env.reset()
         episode_reward = 0
@@ -14,7 +13,7 @@ def train_DQN(episodes, env, agent, batch_size, actions_list, score_window, stop
         
         # Run until time to maturity is reached
         while not done:
-            # Send noice when we choose action
+            # Send noise when we choose action
             action_idx = agent.select(state)
             action = actions_list[action_idx]
             reward, next_state, done = env.step(action)

@@ -1,6 +1,10 @@
 import numpy as np 
 
 class OUNoise():
+    """
+    The OUNoise class implements the Ornstein-Uhlenbeck process, which is a stochastic process that generates temporally correlated noise.
+    """
+
     def __init__(self, mu, sigma = 0.2, theta = 0.15, dT = 1e-2, x0 = None):
         self.mu = mu
         self.sigma = sigma
@@ -10,6 +14,9 @@ class OUNoise():
         self.reset()
 
     def __call__(self):
+        """
+        Generates the next noise value based on the previous value, the mean (mu), the volatility (sigma), and the speed of mean reversion (theta).
+        """
         x = ( self.x_prev + self.theta *(self.mu - self.x_prev) 
             + self.sigma * np.sqrt(self.dT) * np.random.normal(size = self.mu.shape)
             )
