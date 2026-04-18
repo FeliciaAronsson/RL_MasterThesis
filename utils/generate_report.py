@@ -65,7 +65,7 @@ def build_report(
 <body>
 <div class="header">
   <h1>Hedging using Deep Reinforcement Learning</h1>
-  <p>Master thesis work by; Felicia Aronsson &amp; Jelena N&auml;&auml;s,; Ume&aring; University, 2026</p>
+  <p>Master thesis work by Felicia Aronsson &amp; Jelena N&auml;&auml;s, Ume&aring; University, 2026</p>
 </div>
 <div class="container">
 """)
@@ -337,10 +337,19 @@ if __name__ == "__main__":
         output_path="/mnt/user-data/outputs/hedging_report.html"
     )
 
-def print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice):
-    agents = ["BSM", "DDPG", "DQN", "TD3", "Hybrid"]
-    costs  = [Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid]
-    means  = [-np.mean(c) / OptionPrice * 100 for c in costs]
-    stds   = [ np.std(c)  / OptionPrice * 100 for c in costs]
-    df = pd.DataFrame({"Mean (%)": means, "Std (%)": stds}, columns=agents)
-    print(df.round(3).to_string())
+# def print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice):
+#     agents = ["BSM", "DDPG", "DQN", "TD3", "Hybrid"]
+#     costs  = [Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid]
+#     means  = [-np.mean(c) / OptionPrice * 100 for c in costs]
+#     stds   = [ np.std(c)  / OptionPrice * 100 for c in costs]
+
+#     df = pd.DataFrame(
+#         [means, stds],
+#         index=["Mean (%)", "Std (%)"],
+#         columns=agents
+#     )
+#     print("\n" + "="*55)
+#     print("  Hedging Performance Summary")
+#     print("="*55)
+#     print(df.round(3).to_string())
+#     print("="*55 + "\n")
