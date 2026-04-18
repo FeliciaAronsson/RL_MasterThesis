@@ -7,11 +7,12 @@ from env.hedging_env import HedgingEnv
 from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
 #from utils.print import plot_learningcurve, plot_histogram, print_hedge_table, plot_learningcurve_DDPG, plot_learningcurve_DQN, plot_learningcurve_TD3, plot_learningcurve_hybrid, plot_policy_heatmap, plot_hedge_trajectory, plot_hybrid_decomposition
+from utils.generate_report import build_report
+from utils.generate_report import print_hedge_table
 
 from train.train_DDPG_TD3 import train_DDPG_TD3
 from train.train_DQN import train_DQN
-from train.train_hybrid import train_hybrid
-from train.train_hybrid import train_hybrid_sequential
+from train.train_hybrid import train_hybrid, train_hybrid_sequential
 
 from models.dqn_agent import DQNAgent
 from models.td3_agent import TD3Agent
@@ -76,9 +77,9 @@ min_noise = 0.01
 #episode_rewards_TD3 = train_RL(episodes, env, td3_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
 
 # Train with ou noise
-episode_rewards_HYBRID = train_hybrid(episodes, env, hybrid_agent, batch_size, score_window_lenght, stop_avg_reward)
 episode_rewards_TD3 = train_DDPG_TD3(episodes, env, td3_agent, batch_size, score_window_lenght, stop_avg_reward)
 episode_rewards_DDPG = train_DDPG_TD3(episodes, env, ddpg_agent, batch_size, score_window_lenght, stop_avg_reward)
+episode_rewards_HYBRID = train_hybrid(episodes, env, hybrid_agent, batch_size, score_window_lenght, stop_avg_reward)
 
 episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
 
@@ -166,64 +167,13 @@ Cost_hybrid = compute_cost(policy_Hybrid, n_trails, n_steps, spot, strike, matur
 
 OptionPrice = bs_price(spot, strike, r, maturity, vol)
 
-
-
-# ── Imports — ersätt den gamla raden ──────────────────────────────────────────
-from utils.print import (
-    print_hedge_table,
-    plot_histogram,
-    plot_cost_bars,
-    plot_learningcurve,
-    plot_learningcurve_grid,
-    plot_policy_heatmaps,
-    plot_hedge_trajectory,
-    plot_hybrid_decomposition,
+build_report(
+    Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice,
+    episode_rewards_DDPG, episode_rewards_DQN,
+    episode_rewards_TD3, episode_rewards_HYBRID,
+    output_path="hedging_report.html"
 )
 
-# ── Plot results — ersätt hela plot-sektionen i slutet av main.py ─────────────
-
-# 1. Summary table
 print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
-
-# 2. Cost distribution histogram (alla agenter inkl hybrid)
-plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
-
-# 3. Mean ± std bar chart
-plot_cost_bars(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
-
-# 4. Combined learning curves
-plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN,
-                   episode_rewards_TD3, episode_rewards_HYBRID)
-
-# 5. Individual learning curves i 2x2 grid
-plot_learningcurve_grid(episode_rewards_DDPG, episode_rewards_DQN,
-                        episode_rewards_TD3, episode_rewards_HYBRID)
-
-# 6. Policy heatmaps — vad har varje agent lärt sig?
-plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
-                     actions_list, maturity, vol)
-
-# 7. Hedge trajectory — hur beter sig agenterna under en episod?
-plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
-                      actions_list, vol)
-
-# 8. Hybrid decomposition — hur finjusterar TD3 DQN:s val?
-plot_hybrid_decomposition(hybrid_agent, actions_list, maturity)
-
-# Plot results
-
-# print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
-# plot_histogram(Cost_DDPG, Cost_DQN, Cost_TD3, Cost_BSM)
-# plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN, episode_rewards_TD3)
-# plot_learningcurve_DDPG(episode_rewards_DDPG)
-# plot_learningcurve_DQN(episode_rewards_DQN)
-# plot_learningcurve_TD3(episode_rewards_TD3)
-# plot_learningcurve_hybrid(episode_rewards_HYBRID) #, episode_rewards_DQN, episode_rewards_TD3)
-
-
-#VÄldigt oklart men det sker någonting iallafall..........
-#plot_policy_heatmap(dqn_agent, td3_agent, actions_list, maturity, strike)
-#plot_hedge_trajectory(env, dqn_agent, td3_agent, actions_list, bs_delta)
-#plot_hybrid_decomposition(dqn_agent, td3_agent, actions_list)
 
 print("Done!")
