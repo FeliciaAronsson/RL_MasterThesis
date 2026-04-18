@@ -6,11 +6,12 @@ from env.hedging_env import HedgingEnv
 #from utils.policy import Policy
 from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
-from utils.print import plot_learningcurve, plot_histogram, print_hedge_table, plot_learningcurve_DDPG, plot_learningcurve_DQN, plot_learningcurve_TD3, plot_learningcurve_hybrid, plot_policy_heatmap, plot_hedge_trajectory, plot_hybrid_decomposition
+#from utils.print import plot_learningcurve, plot_histogram, print_hedge_table, plot_learningcurve_DDPG, plot_learningcurve_DQN, plot_learningcurve_TD3, plot_learningcurve_hybrid, plot_policy_heatmap, plot_hedge_trajectory, plot_hybrid_decomposition
 
 from train.train_DDPG_TD3 import train_DDPG_TD3
 from train.train_DQN import train_DQN
-from train.train_hybrid import *
+from train.train_hybrid import train_hybrid
+from train.train_hybrid import train_hybrid_sequential
 
 from models.dqn_agent import DQNAgent
 from models.td3_agent import TD3Agent
@@ -44,7 +45,7 @@ batch_size = 64
 
 # To handle discrete actions for DQN 
 actions_list = np.linspace(0, 1, 11)
-action_bins = [[actions_list[i], actions_list[i+1]] for i in range(len(actions_list)-1)]
+#action_bins = [[actions_list[i], actions_list[i+1]] for i in range(len(actions_list)-1)]
 action_dimension = len(actions_list)
 
 # Define enviroment and agent
@@ -152,33 +153,6 @@ def policy_Hybrid(mR, TTM, Pos):
                      actions_list[np.minimum(bin_idx + 1, len(actions_list)-1)],
                      1.0)
     return np.clip(lower + raw_td3 * (upper - lower), 0.0, 1.0)
-
-
-# def policy_Hybrid(mR, TTM, Pos):
-#     # Tillstånd för agenterna
-#     state = np.stack([mR, TTM, Pos], axis=1)
-#     state_tensor = torch.tensor(state, dtype=torch.float32)
-
-#     with torch.no_grad():
-#         # 1. DQN väljer bin-index
-#         action_index = dqn_agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
-        
-#         # 2. TD3 väljer finjusterat värde (0 till 1)
-#         raw_td3_action = td3_agent.actor(state_tensor).cpu().numpy().squeeze()
-
-#     # Identifiera nedre och övre gräns för valda bins
-#     lower_bound = actions_list[action_index]
-#     # Beräkna övre gräns (nästföljande värde i actions_list eller 1.0)
-#     upper_bound = np.where(action_index + 1 < len(actions_list), 
-#                            actions_list[np.minimum(action_index + 1, len(actions_list)-1)], 
-#                            1.0)
-
-#     # Skala TD3-action till DQN-intervall
-#     final_action = lower_bound + (raw_td3_action * (upper_bound - lower_bound))
-    
-#     return final_action 
-
-
 # Calculate the cost
 
 # Black- Scholes as Benchmark
@@ -192,15 +166,59 @@ Cost_hybrid = compute_cost(policy_Hybrid, n_trails, n_steps, spot, strike, matur
 
 OptionPrice = bs_price(spot, strike, r, maturity, vol)
 
+
+
+# ── Imports — ersätt den gamla raden ──────────────────────────────────────────
+from utils.print import (
+    print_hedge_table,
+    plot_histogram,
+    plot_cost_bars,
+    plot_learningcurve,
+    plot_learningcurve_grid,
+    plot_policy_heatmaps,
+    plot_hedge_trajectory,
+    plot_hybrid_decomposition,
+)
+
+# ── Plot results — ersätt hela plot-sektionen i slutet av main.py ─────────────
+
+# 1. Summary table
+print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
+
+# 2. Cost distribution histogram (alla agenter inkl hybrid)
+plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
+
+# 3. Mean ± std bar chart
+plot_cost_bars(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
+
+# 4. Combined learning curves
+plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN,
+                   episode_rewards_TD3, episode_rewards_HYBRID)
+
+# 5. Individual learning curves i 2x2 grid
+plot_learningcurve_grid(episode_rewards_DDPG, episode_rewards_DQN,
+                        episode_rewards_TD3, episode_rewards_HYBRID)
+
+# 6. Policy heatmaps — vad har varje agent lärt sig?
+plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
+                     actions_list, maturity, vol)
+
+# 7. Hedge trajectory — hur beter sig agenterna under en episod?
+plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
+                      actions_list, vol)
+
+# 8. Hybrid decomposition — hur finjusterar TD3 DQN:s val?
+plot_hybrid_decomposition(hybrid_agent, actions_list, maturity)
+
 # Plot results
 
-print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
-plot_histogram(Cost_DDPG, Cost_DQN, Cost_TD3, Cost_BSM)
-plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN, episode_rewards_TD3)
-plot_learningcurve_DDPG(episode_rewards_DDPG)
-plot_learningcurve_DQN(episode_rewards_DQN)
-plot_learningcurve_TD3(episode_rewards_TD3)
-plot_learningcurve_hybrid(episode_rewards_HYBRID) #, episode_rewards_DQN, episode_rewards_TD3)
+# print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
+# plot_histogram(Cost_DDPG, Cost_DQN, Cost_TD3, Cost_BSM)
+# plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN, episode_rewards_TD3)
+# plot_learningcurve_DDPG(episode_rewards_DDPG)
+# plot_learningcurve_DQN(episode_rewards_DQN)
+# plot_learningcurve_TD3(episode_rewards_TD3)
+# plot_learningcurve_hybrid(episode_rewards_HYBRID) #, episode_rewards_DQN, episode_rewards_TD3)
 
 
 #VÄldigt oklart men det sker någonting iallafall..........
