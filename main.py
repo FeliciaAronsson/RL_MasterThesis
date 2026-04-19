@@ -20,6 +20,7 @@ from models.ddpg_agent import DDPGAgent
 from models.hybrid_agent import HybridAgent
 
 np.random.seed(0)
+#torch.manual_seed(0)
 
 # Environment
 env = HedgingEnv(SPOT, STRIKE, MATURITY, VOL, MU, DT, KAPPA, C, INIT_POSITION, R)

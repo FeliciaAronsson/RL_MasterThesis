@@ -76,7 +76,7 @@ def train_DDPG_TD3_without_OU_noise(episodes, env, agent, batch_size, min_noise,
         avg_reward = np.mean(score_window)
 
         if episode % 100 == 0:
-            print(f"DDPG Episode {episode}, Reward {episode_reward:.4f}, Avg {avg_reward:.4f}")
+            print(agent.__str__() + f" Episode {episode}, Reward {episode_reward:.4f}, Avg {avg_reward:.4f}")
 
 
         if avg_reward > stop_avg_reward and len(score_window) == score_window.maxlen:
