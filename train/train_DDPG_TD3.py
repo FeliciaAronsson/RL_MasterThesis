@@ -42,12 +42,13 @@ def train_DDPG_TD3(episodes, env, agent, batch_size, score_window_lenght, stop_a
     return all_episode_rewards
 
 
-def train_RL(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward):
+def train_DDPG_TD3_without_OU_noise(episodes, env, agent, batch_size, min_noise, noise_scale, noise_decay, score_window_length, stop_avg_reward):
     """
     Training the enviroment, in case we want to run without OU noise
     """
 
     all_episode_rewards = []
+    score_window = deque(maxlen=score_window_length) 
 
     # Training
     for episode in range(episodes):

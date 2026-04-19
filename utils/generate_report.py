@@ -336,20 +336,3 @@ if __name__ == "__main__":
         fake(-60, -15), fake(-55, -18), fake(-50, -12), fake(-52, -14),
         output_path="/mnt/user-data/outputs/hedging_report.html"
     )
-
-# def print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice):
-#     agents = ["BSM", "DDPG", "DQN", "TD3", "Hybrid"]
-#     costs  = [Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid]
-#     means  = [-np.mean(c) / OptionPrice * 100 for c in costs]
-#     stds   = [ np.std(c)  / OptionPrice * 100 for c in costs]
-
-#     df = pd.DataFrame(
-#         [means, stds],
-#         index=["Mean (%)", "Std (%)"],
-#         columns=agents
-#     )
-#     print("\n" + "="*55)
-#     print("  Hedging Performance Summary")
-#     print("="*55)
-#     print(df.round(3).to_string())
-#     print("="*55 + "\n")

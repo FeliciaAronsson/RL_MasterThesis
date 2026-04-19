@@ -29,8 +29,6 @@ class ReplayBuffer:
     def sample(self, batch):
         """
         Train the agents network (Actor-Critic) on a random barch
-
-        :param batch: Batch size
         """
         samples = random.sample(self.buffer, batch)
         state, action, reward, next_state, done =  map(np.array, zip(*samples))
