@@ -25,8 +25,8 @@ np.random.seed(0)
 env = HedgingEnv(SPOT, STRIKE, MATURITY, VOL, MU, DT, KAPPA, C, INIT_POSITION, R)
 
 # Single agents
-ddpg_agent = DDPGAgent(STATE_DIM, ACTION_DIM, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
 dqn_agent = DQNAgent(STATE_DIM, ACTION_DIMENSION, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
+ddpg_agent = DDPGAgent(STATE_DIM, ACTION_DIM, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
 td3_agent = TD3Agent(STATE_DIM, ACTION_DIM, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
 
 # Hybrid agent 
@@ -38,18 +38,17 @@ hybrid_agent = HybridAgent(hybrid_dqn, hybrid_td3, ACTIONS_LIST)
 #episode_rewards_DDPG = train_DDPG_TD3_without_OU_noise(EPISODES, env, ddpg_agent, BATCH_SIZE, min_noise = 0.01, noise_scale = 0.02, noise_decay = 0.9995, score_window_length=SCORE_WINDOW_LENGTH, stop_avg_reward=STOP_AVG_REWARD)
 #episode_rewards_TD3 = train_DDPG_TD3_without_OU_noise(EPISODES, env, td3_agent, BATCH_SIZE, min_noise = 0.01, noise_scale = 0.02, noise_decay = 0.9995, score_window_length=SCORE_WINDOW_LENGTH, stop_avg_reward=STOP_AVG_REWARD)
 
-# Train with ou noise
-episode_rewards_TD3 = train_DDPG_TD3(EPISODES, env, td3_agent, BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
-episode_rewards_DDPG = train_DDPG_TD3(EPISODES, env, ddpg_agent, BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
-
-episode_rewards_HYBRID = train_hybrid(EPISODES, env, hybrid_agent, BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
+# Train Agents
 episode_rewards_DQN = train_DQN(EPISODES, env, dqn_agent, BATCH_SIZE, ACTIONS_LIST, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
+episode_rewards_DDPG = train_DDPG_TD3(EPISODES, env, ddpg_agent, BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
+episode_rewards_TD3 = train_DDPG_TD3(EPISODES, env, td3_agent, BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
+episode_rewards_HYBRID = train_hybrid(EPISODES, env, hybrid_agent, BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
 
 # Create Policies
 policy_BSM = make_policy_BSM(STRIKE, R, VOL)
+policy_DQN = make_policy_DQN(dqn_agent, ACTIONS_LIST)
 policy_DDPG = make_policy_DDPG(ddpg_agent)
 policy_TD3  = make_policy_TD3(td3_agent)
-policy_DQN = make_policy_DQN(dqn_agent, ACTIONS_LIST)
 policy_Hybrid = make_policy_Hybrid(hybrid_agent, ACTIONS_LIST)
 
 #### Compute costs ####
