@@ -1,24 +1,11 @@
 import numpy as np
 from collections import deque
 
-def train_DQN(episodes, env, agent, batch_size, actions_list, score_window, stop_avg_reward):
-    """
-    Training the enviroment
-    
-    :param episodes: Description
-    :param env: Description
-    :param agent: Description
-    :param batch_size: Description
-    :param min_noise: Description
-    :param noise_decay: Description
-    :param score_window: Description
-    :param stop_avg_reward: Description
-    """
+def train_DQN(episodes, env, agent, batch_size, actions_list, score_window_length, stop_avg_reward):
 
     all_episode_rewards = []
-    score_window = deque(maxlen=200) 
+    score_window = deque(maxlen=score_window_length) 
 
-    # Training
     for episode in range(episodes):
         state = env.reset()
         episode_reward = 0
@@ -26,7 +13,7 @@ def train_DQN(episodes, env, agent, batch_size, actions_list, score_window, stop
         
         # Run until time to maturity is reached
         while not done:
-            # Send noice when we choose action
+            # Send noise when we choose action
             action_idx = agent.select(state)
             action = actions_list[action_idx]
             reward, next_state, done = env.step(action)

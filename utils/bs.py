@@ -4,7 +4,7 @@ from scipy.stats import norm
 
 def bs_price(S, K, r, T, sigma):
     """
-    Calculate option price, Black-Scholes-Moreton
+    Calculate option price, Black-Scholes-Merton model.
     
     :param S: Spot price
     :param K: Strike price
@@ -36,7 +36,6 @@ def bs_delta(S, K, r, T, sigma):
     S = np.asarray(S, dtype=float)
     T = np.asarray(T, dtype=float)
 
-    #T_safe: division with zero not possible
     T_safe = np.maximum(T, 1e-8)
     d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T_safe) / (sigma * np.sqrt(T_safe))
     

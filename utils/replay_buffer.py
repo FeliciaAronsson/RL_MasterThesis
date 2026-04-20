@@ -2,10 +2,13 @@ import random
 import numpy as np
 
 class ReplayBuffer:
+    """
+    The ReplayBuffer class implements a replay buffer for storing and sampling transitions in reinforcement learning.
+    It allows the agent to store past experiences (state, action, reward, next_state, done) and sample random batches of these experiences for training the neural networks.
+    """
     def __init__(self, size=1_000_000):
         self.buffer = []
         self.size = size
-
 
     def add(self, state, action, reward, next_state, done):
         """
@@ -26,14 +29,11 @@ class ReplayBuffer:
     def sample(self, batch):
         """
         Train the agents network (Actor-Critic) on a random barch
-
-        :param batch: Batch size
         """
         samples = random.sample(self.buffer, batch)
         state, action, reward, next_state, done =  map(np.array, zip(*samples))
         
         return state, action, reward, next_state, done
     
-
     def __len__(self):
         return len(self.buffer)

@@ -35,7 +35,7 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
         
         if timeidx == n_steps: 
             # Final step (matuarity)
-            rew[timeidx - 1, :] = rew[timeidx - 1, :] + pos_next * sim_paths[timeidx, :] * kappa
+            rew[timeidx - 1, :] -= pos_next * sim_paths[timeidx, :] * kappa
             
         else:
             pos_prev = pos_next

@@ -1,207 +1,92 @@
-
 import numpy as np
-from collections import deque
-import torch 
-
+from config import (SPOT, STRIKE, MATURITY, VOL, MU, DT, KAPPA, C, INIT_POSITION, R, TAU, GAMMA, LEARN_RATE, STATE_DIM, ACTION_DIM, HIDDEN_DIM, BATCH_SIZE,
+                    ACTIONS_LIST, ACTION_DIMENSION, EPISODES, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD, PLOT, REPORT)
 
 from env.hedging_env import HedgingEnv
-
-from utils.policy import Policy
 from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
-from utils.print import plot_learningcurve, plot_histogram, print_hedge_table, plot_learningcurve_DDPG, plot_learningcurve_DQN, plot_learningcurve_TD3, plot_learningcurve_hybrid, plot_policy_heatmap, plot_hedge_trajectory, plot_hybrid_decomposition
+from utils.generate_report import build_report
+from utils.print import (print_hedge_table, plot_histogram, plot_cost_bars, plot_learningcurve, plot_learningcurve_grid, 
+                         plot_policy_heatmaps, plot_hedge_trajectory, plot_hybrid_decomposition,)
+from utils.policy import (make_policy_BSM, make_policy_DDPG, make_policy_TD3, make_policy_DQN, make_policy_Hybrid,)
 
-#from utils.policy import policy_BSM, policy_RL
-from train.train_DDPG_TD3 import train_DDPG_TD3
+from train.train_DDPG_TD3 import train_DDPG_TD3, train_DDPG_TD3_without_OU_noise
 from train.train_DQN import train_DQN
-from train.train_hybrid import train_hybrid
+from train.train_hybrid import train_hybrid, train_hybrid_sequential
 
-# Agents 
 from models.dqn_agent import DQNAgent
 from models.td3_agent import TD3Agent
 from models.ddpg_agent import DDPGAgent
 from models.hybrid_agent import HybridAgent
 
 np.random.seed(0)
+#torch.manual_seed(0)
 
+# Environment
+env = HedgingEnv(SPOT, STRIKE, MATURITY, VOL, MU, DT, KAPPA, C, INIT_POSITION, R)
 
-# Settings
-spot = 100
-strike = 100
-maturity = 21*3/250
-vol = 0.2
-mu = 0.05
-dT = 1/250
-kappa = 0.01
-c = 1.5
-init_position = 0
-r = 0
+# Single agents
+dqn_agent = DQNAgent(STATE_DIM, ACTION_DIMENSION, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
+ddpg_agent = DDPGAgent(STATE_DIM, ACTION_DIM, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
+td3_agent = TD3Agent(STATE_DIM, ACTION_DIM, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
 
-# Hyperparameters
-tau = 5e-4
-gamma = 0.9995
-learnRate = 1e-4
+# Hybrid agent 
+hybrid_dqn = DQNAgent(STATE_DIM, ACTION_DIMENSION, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
+hybrid_td3 = TD3Agent(STATE_DIM, ACTION_DIM, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
+hybrid_agent = HybridAgent(hybrid_dqn, hybrid_td3, ACTIONS_LIST)
 
-# Neural Network settings
-state_dim = 3
-action_dim = 1
-hidden_dim = 64
-batch_size = 64
+# # Train without ou noise
+#episode_rewards_DDPG = train_DDPG_TD3_without_OU_noise(EPISODES, env, ddpg_agent, BATCH_SIZE, min_noise = 0.01, noise_scale = 0.02, noise_decay = 0.9995, score_window_length=SCORE_WINDOW_LENGTH, stop_avg_reward=STOP_AVG_REWARD)
+#episode_rewards_TD3 = train_DDPG_TD3_without_OU_noise(EPISODES, env, td3_agent, BATCH_SIZE, min_noise = 0.01, noise_scale = 0.02, noise_decay = 0.9995, score_window_length=SCORE_WINDOW_LENGTH, stop_avg_reward=STOP_AVG_REWARD)
 
-# To handle discrete actions for DQN 
-actions_list = np.linspace(0, 1, 11)
-# For the actions list in the hybrid agent, we should have an interval index. 
-action_bins = [[actions_list[i], actions_list[i+1]] for i in range(len(actions_list)-1)]
+# Train Agents
+episode_rewards_DQN = train_DQN(EPISODES, env, dqn_agent, BATCH_SIZE, ACTIONS_LIST, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
+episode_rewards_DDPG = train_DDPG_TD3(EPISODES, env, ddpg_agent, BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
+episode_rewards_TD3 = train_DDPG_TD3(EPISODES, env, td3_agent, BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
+episode_rewards_HYBRID = train_hybrid(EPISODES, env, hybrid_agent, BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
 
-# To see the result
-#print(action_bins)
-# Dimensions of the action list
-action_dimension = len(actions_list)
+# Create Policies
+policy_BSM = make_policy_BSM(STRIKE, R, VOL)
+policy_DQN = make_policy_DQN(dqn_agent, ACTIONS_LIST)
+policy_DDPG = make_policy_DDPG(ddpg_agent)
+policy_TD3  = make_policy_TD3(td3_agent)
+policy_Hybrid = make_policy_Hybrid(hybrid_agent, ACTIONS_LIST)
 
-# Define enviroment and agent
-env = HedgingEnv(spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r)
-
-# td3_agent = 
-ddpg_agent = DDPGAgent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
-dqn_agent = DQNAgent(state_dim, action_dimension, hidden_dim, tau, gamma, learnRate)
-td3_agent = TD3Agent(state_dim, action_dim, hidden_dim, tau, gamma, learnRate)
-hybrid_agent = HybridAgent(dqn_agent, td3_agent, actions_list)
-
-# Stopping criterion
-score_window_lenght = 200
-stop_avg_reward = 0
-episodes = 500
-
-# Variables to add noice (increase exploration)
-noise_scale = 0.2 
-
-noise_decay =  0.9995
-min_noise = 0.01
-
-# Train without ou noice
-#episode_rewards_DDPG = train_RL(episodes, env, ddpg_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
-#episode_rewards_TD3 = train_RL(episodes, env, td3_agent, batch_size, min_noise, noise_scale, noise_decay, score_window, stop_avg_reward)
-#episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window, stop_avg_reward)
-
-# Train with ou noice
-episode_rewards_DDPG = train_DDPG_TD3(episodes, env, ddpg_agent, batch_size, score_window_lenght, stop_avg_reward)
-#episode_rewards_TD3 = train_DDPG_TD3(episodes, env, td3_agent, batch_size, score_window_lenght, stop_avg_reward)
-#episode_rewards_DQN = train_DQN(episodes, env, dqn_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
-#episode_rewards_HYBRID = train_hybrid(episodes, env, dqn_agent, td3_agent, batch_size, actions_list, score_window_lenght, stop_avg_reward)
-
-
-# Cost function
+#### Compute costs ####
 n_trails = 1000
-n_steps = int(maturity / dT)
+n_steps = int(MATURITY / DT)
 
-#policy_dqn = Policy(dqn_agent, strike, vol, r, actions_list)
-#policy_rl = Policy(ddpg_agent, strike, vol, r, actions_list )
+# Black- Scholes as Benchmark
+Cost_BSM = compute_cost(policy_BSM, n_trails, n_steps, SPOT, STRIKE, MATURITY, R, VOL, INIT_POSITION, DT, MU, KAPPA)
 
-def policy_BSM(mR, TTM, Pos):
-    """
-    Docstring for policy_BSM
-    
-    :param mR: Description
-    :param TTM: Description
-    :param Pos: Description
-    """
-    S = mR * strike
-    return bs_delta(S, strike, r, TTM, vol)
+#Deep reinforcement Agents
+Cost_DQN = compute_cost(policy_DQN,  n_trails, n_steps, SPOT, STRIKE, MATURITY, R, VOL, INIT_POSITION, DT, MU, KAPPA)
+Cost_DDPG = compute_cost(policy_DDPG, n_trails, n_steps, SPOT, STRIKE, MATURITY, R, VOL, INIT_POSITION, DT, MU, KAPPA)
+Cost_TD3 = compute_cost(policy_TD3,  n_trails, n_steps, SPOT, STRIKE, MATURITY, R, VOL, INIT_POSITION, DT, MU, KAPPA)
+Cost_hybrid = compute_cost(policy_Hybrid, n_trails, n_steps,SPOT, STRIKE, MATURITY, R, VOL, INIT_POSITION, DT, MU, KAPPA)
 
+#### Report and Plots ###
+OptionPrice = bs_price(SPOT, STRIKE, R, MATURITY, VOL)
 
-def policy_DDPG(mR, TTM, Pos):
-    """
-    Docstring for policy_RL
-    
-    :param mR: Description
-    :param TTM: Description
-    :param Pos: Description
-    """
-    
-    state = np.stack([mR, TTM, Pos], axis=1)
-    state_tensor = torch.tensor(state, dtype=torch.float32)
+print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
 
-    with torch.no_grad():
-        action = ddpg_agent.actor(state_tensor).cpu().numpy()
+if REPORT:
+    build_report(
+        Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice,
+        episode_rewards_DDPG, episode_rewards_DQN,
+        episode_rewards_TD3, episode_rewards_HYBRID,
+        output_path="hedging_report.html"
+    )
 
-    return action.squeeze()
+if PLOT:
+    plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
+    plot_cost_bars(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
+    plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN,
+                       episode_rewards_TD3, episode_rewards_HYBRID)
+    plot_learningcurve_grid(episode_rewards_DDPG, episode_rewards_DQN,
+                            episode_rewards_TD3, episode_rewards_HYBRID)
+    plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent, ACTIONS_LIST, MATURITY, VOL)
+    plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent, ACTIONS_LIST, VOL)
+    plot_hybrid_decomposition(hybrid_agent, ACTIONS_LIST, MATURITY)
 
-def policy_TD3(mR, TTM, Pos):
-    """
-    Docstring for policy_RL
-    
-    :param mR: Description
-    :param TTM: Description
-    :param Pos: Description
-    """
-    
-    state = np.stack([mR, TTM, Pos], axis=1)
-    state_tensor = torch.tensor(state, dtype=torch.float32)
-
-    with torch.no_grad():
-        action = td3_agent.actor(state_tensor).cpu().numpy()
-
-    return action.squeeze()
-
-def policy_DQN(mR, TTM, Pos):
-    state = np.stack([mR, TTM, Pos], axis=1)
-    state_tensor = torch.tensor(state, dtype=torch.float32)
-
-    with torch.no_grad():                        # Här är policyn argmax som ända skillnaden
-        action_index = dqn_agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
-
-    return actions_list[action_index]
-
-
-def policy_Hybrid(mR, TTM, Pos):
-    # Tillstånd för agenterna
-    state = np.stack([mR, TTM, Pos], axis=1)
-    state_tensor = torch.tensor(state, dtype=torch.float32)
-
-    with torch.no_grad():
-        # 1. DQN väljer bin-index
-        action_index = dqn_agent.qnet(state_tensor).argmax(dim=1).cpu().numpy()
-        
-        # 2. TD3 väljer finjusterat värde (0 till 1)
-        raw_td3_action = td3_agent.actor(state_tensor).cpu().numpy().squeeze()
-
-    # Identifiera nedre och övre gräns för valda bins
-    lower_bound = actions_list[action_index]
-    # Beräkna övre gräns (nästföljande värde i actions_list eller 1.0)
-    upper_bound = np.where(action_index + 1 < len(actions_list), 
-                           actions_list[np.minimum(action_index + 1, len(actions_list)-1)], 
-                           1.0)
-
-    # Skala TD3-action till DQN-intervall
-    final_action = lower_bound + (raw_td3_action * (upper_bound - lower_bound))
-    
-    return final_action 
-
-
-
-# Calculate the cost
-
-#Cost_DQN = compute_cost(policy_DQN,  n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-Cost_BSM = compute_cost(policy_BSM, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-Cost_DDPG = compute_cost(policy_DDPG, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-#Cost_TD3 = compute_cost(policy_TD3,  n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-#Cost_hybrid = compute_cost(policy_Hybrid, n_trails, n_steps, spot, strike, maturity, r, vol, init_position, dT, mu, kappa)
-
-OptionPrice = bs_price(spot, strike, r, maturity, vol)
-
-
-# Plot results
-
-#print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
-#plot_histogram(Cost_DDPG, Cost_DQN, Cost_TD3, Cost_BSM)
-#plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN, episode_rewards_TD3)
-plot_learningcurve_DDPG(episode_rewards_DDPG)
-#plot_learningcurve_DQN(episode_rewards_DQN)
-#plot_learningcurve_TD3(episode_rewards_TD3)
-#plot_learningcurve_hybrid(episode_rewards_HYBRID) #, episode_rewards_DQN, episode_rewards_TD3)
-
-
-#VÄldigt oklart men det sker någonting iallafall..........
-#plot_policy_heatmap(dqn_agent, td3_agent, actions_list, maturity, strike)
-#plot_hedge_trajectory(env, dqn_agent, td3_agent, actions_list, bs_delta)
-#plot_hybrid_decomposition(dqn_agent, td3_agent, actions_list)
+print("Done!")

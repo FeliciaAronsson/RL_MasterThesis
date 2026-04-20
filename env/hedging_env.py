@@ -4,19 +4,19 @@ from utils.bs import bs_price
 class HedgingEnv:
     def __init__(self, spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r):
         """
-        Docstring for __init__
-        
-        :param self: Description
-        :param spot: The current market price ogf the underlying asset
+        The Hedging class defines the environment for the hedging task. It simulates the price dynamics of the underlying asset and calculates rewards based on the agent's actions. 
+        The environment is designed to be used with reinforcement learning agents that learn to hedge an option position over time.
+
+        :param spot: The current market price off the underlying asset
         :param strike: The set price that an option can be excercised 
         :param maturity: Time remaining until the option can be excercised. Acts like a horizion for each episode.
         :param vol: Expected volatility, the riskiness of the stock price. Higher vol makes hedging tasks much harder because the price mves more unpredictable
-        :param mu: Description
+        :param mu: Expected return, the average return of the underlying asset.
         :param dT: Time step, the frequency of trading, how many steps that are in each episode
         :param kappa: Risk Aversion parameter, "how much should the agent dislike variance"
         :param c: Transaction cost, the cost of trading, a fee for every dollar of stoock thats been bought or sold.
-        :param init_position: Description
-        :param r: Description
+        :param init_position: Position at the start of each episode, how many units of the underlying asset the agent is holding at the beginninng.
+        :param r: risk free rate
         """
  
         self.start_spot = spot
@@ -42,14 +42,14 @@ class HedgingEnv:
 
 
     def step(self, action):
+        # Starting point for the step function, we will update the state of the environment based on the action taken by the agent and calculate the reward for that action.
         ttm_prev = self.maturity
         pos_prev = self.initPosition
         spot_prev = self.spot
-        # Nollställa
         step_reward = 0
         reward = 0
 
-        # GBM
+        # Geometric Brownian Motion for price simulation
         spot_next = spot_prev * ((1 + self.mu * self.dT) + (np.random.randn() * self.vol) * np.sqrt(self.dT))
         ttm_next = max(0, self.maturity - self.dT)
 
