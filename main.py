@@ -8,7 +8,7 @@ from utils.compute_cost import compute_cost
 from utils.generate_report import build_report
 from utils.print import (print_hedge_table, plot_histogram, plot_cost_bars, plot_learningcurve, plot_learningcurve_grid, 
                          plot_policy_heatmaps, plot_hedge_trajectory, plot_hybrid_decomposition,)
-from utils.policy import (make_policy_BSM, make_policy_DDPG, make_policy_TD3, make_policy_DQN, make_policy_Hybrid,)
+from utils.policy import (make_policy_BSM, make_policy_DDPG, make_policy_TD3, make_policy_DQN, make_policy_Hybrid)
 
 from train.train_DDPG_TD3 import train_DDPG_TD3, train_DDPG_TD3_without_OU_noise
 from train.train_DQN import train_DQN
@@ -69,7 +69,7 @@ Cost_hybrid = compute_cost(policy_Hybrid, n_trails, n_steps,SPOT, STRIKE, MATURI
 OptionPrice = bs_price(SPOT, STRIKE, R, MATURITY, VOL)
 
 print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
-
+"""
 if REPORT:
     build_report(
         Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice,
@@ -77,7 +77,7 @@ if REPORT:
         episode_rewards_TD3, episode_rewards_HYBRID,
         output_path="hedging_report.html"
     )
-
+"""
 if PLOT:
     plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
     plot_cost_bars(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)

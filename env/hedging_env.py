@@ -57,7 +57,7 @@ class HedgingEnv:
 
         # Reward P&L
         step_reward = ((spot_next - spot_prev) * action 
-                        - abs((action - pos_prev) * spot_next) * self.kappa 
+                        - abs((action - pos_prev) * spot_next) * self.kappa
                         - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
                         + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
 

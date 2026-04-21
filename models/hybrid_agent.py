@@ -1,4 +1,5 @@
 import numpy as np
+from utils.experience_buffer import ExperienceBuffer
 
 
 class HybridAgent:
@@ -6,6 +7,9 @@ class HybridAgent:
         self.dqn = dqn_agent
         self.td3 = td3_agent
         self.actions_list = actions_list 
+
+        self.experience_buffer = ExperienceBuffer()
+        
 
     def select(self, state):
         # DQN selects coarse bin
@@ -21,12 +25,25 @@ class HybridAgent:
         raw_td3 = self.td3.select(state)
 
         # Rescale TD3 output to [lower_bound, upper_bound]
-        action = lower_bound + raw_td3 * (upper_bound - lower_bound)
-        action = float(np.clip(action, 0.0, 1.0))
+        if raw_td3 < lower_bound:
+            action = lower_bound - raw_td3 * (upper_bound - lower_bound)
+            action = float(np.clip(action, 0.0, 1.0))
+             
+        elif raw_td3 == lower_bound:
+            action = lower_bound
+            action = float(np.clip(action, 0.0, 1.0))
+             
+        else:
+            action = lower_bound + raw_td3 * (upper_bound - lower_bound)
+            action = float(np.clip(action, 0.0, 1.0))
 
         return action, bin_idx, raw_td3
 
+
+
     def train(self, batch_size):
+        #if len(self.experience_buffer) < batch_size:
+        #     return
         self.dqn.train(batch_size)
         self.td3.train(batch_size)
 

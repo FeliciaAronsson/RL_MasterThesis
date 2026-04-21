@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import torch
-from utils.bs import bs_delta as bs_delta_func
+from utils.bs import bs_delta
 
 COLORS = {
     "BSM":    "#2196F3",
@@ -221,7 +221,7 @@ def plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
         return lo + raw * (hi - lo)
 
     bsm_grid = np.array([
-        [bs_delta_func(mR, 1.0, 0.0, t, vol) for t in ttm]
+        [bs_delta(mR, 1.0, 0.0, t, vol) for t in ttm]
         for mR in moneyness
     ])
 
@@ -272,7 +272,7 @@ def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
     done  = False
 
     prices  = [env.spot]
-    bsm_pos = [bs_delta_func(env.spot, env.strike, env.rate, env.maturity, vol)]
+    bsm_pos = [bs_delta(env.spot, env.strike, env.rate, env.maturity, vol)]
     pos     = {name: [] for name in ["DDPG", "DQN", "TD3", "Hybrid"]}
 
     while not done:
@@ -292,17 +292,17 @@ def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
             raw = hybrid_agent.td3.actor(s).item()
             lo  = actions_list[idx]
             hi  = actions_list[idx + 1] if idx + 1 < len(actions_list) else 1.0
-            a_h = lo + raw * (hi - lo)
+            a_hybrid = lo + raw * (hi - lo)
 
         pos["DDPG"].append(a_ddpg)
         pos["DQN"].append(a_dqn)
         pos["TD3"].append(a_td3)
-        pos["Hybrid"].append(a_h)
+        pos["Hybrid"].append(a_hybrid)
 
         reward, next_state, done = env.step(a_td3)
         prices.append(env.spot)
         bsm_pos.append(
-            bs_delta_func(env.spot, env.strike, env.rate, env.maturity, vol))
+            bs_delta(env.spot, env.strike, env.rate, env.maturity, vol))
         state = next_state
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True,

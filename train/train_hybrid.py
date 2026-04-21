@@ -32,8 +32,13 @@ def train_hybrid(episodes, env, agent, batch_size, score_window_length, stop_avg
             # TD3 learns to fine-tune within the bin — stores its raw output
             agent.td3.buffer.add(state, raw_td3, reward, next_state, done)
 
+            # Experience Buffer
+            agent.experience_buffer.add(state, bin_idx, raw_td3, reward, next_state, done)
+
             # Train both sub-agents
             agent.train(batch_size)
+
+
 
             state = next_state
             episode_reward += reward
