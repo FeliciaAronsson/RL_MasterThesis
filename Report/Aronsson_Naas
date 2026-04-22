@@ -41,7 +41,6 @@ abstracton=true
 \usepackage{amsthm,thmtools}
 \usepackage{mathtools}
 \usepackage{bbm}
-
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -57,6 +56,7 @@ abstracton=true
 % Figures & color
 \usepackage{graphicx} 
 \usepackage{float}
+\usepackage{wrapfig}
 \usepackage[section]{placeins} % float barrier after sections
 \usepackage{pdflscape} % provides \includepdf
 \usepackage[format=plain]{caption}
@@ -125,10 +125,15 @@ abstracton=true
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Glossary
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \usepackage{glossaries}
-\newacronym{ABC}{ABC}{Alphabet}
 
 \makeglossaries
+
+
+
+\newacronym{ABC}{ABC}{Alphabet}
+
 \newglossarystyle{mylist}{%
   \setglossarystyle{list}% base this style on the list style
   \renewcommand*{\glossentry}[2]{%
@@ -157,10 +162,10 @@ abstracton=true
         \node[align=center,anchor=north, below = of LogoUmU.south] (BackgroundUmu) {\includegraphics[width=.9\paperwidth]{Figures/Titlepage.jpg}};
         \node[anchor=south west,align=left] at (BackgroundUmu.south west) {\color{white}
             \begin{tabular}{lll}
-                Supervisor & Title Kevin Kamm & 
-Department of Mathematics \& Mathematical Statistics\\
-                Supervisor & Title Name Surname & Affiliation\\
-                Examiner & Title Natalya Pya Arnqvist & Department of Mathematics \& Mathematical Statistics 
+                Supervisor & Associate professor Kevin Kamm & 
+Umeå University\\
+                Supervisor & Viktor Jonsson & Vermiculus\\
+                Examiner & Associate Professor Natalya Pya Arnqvist & Umeå University
             \end{tabular}
         };
     \end{tikzpicture}
@@ -173,7 +178,7 @@ Department of Mathematics \& Mathematical Statistics\\
         \Huge
         \bfseries 
         \sffamily
-        Title of Thesis
+        Hedging using Deep Reinforcement Learning
     }\\[1em]
     {%
         \color{white}
@@ -208,7 +213,7 @@ Department of Mathematics \& Mathematical Statistics\\
 \end{center}
 \vfill
 \begin{center}
-    Master thesis, 30 hp\\
+    Master thesis, 30 hp\\ 
     M. Sc. Industrial Engineering \& Management, 300 hp\\
     Spring term 2026
 \end{center}
@@ -237,14 +242,27 @@ Department of Mathematics \& Mathematical Statistics\\
     Det är svenska sammanfattning.
 \end{abstract}
 \newpage
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Acknowledgements
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\section*{Acknowledgements}
-%\newpage
+\section*{Acknowledgments}
+We would like to start by thanking our supervisor, Kevin Kamm at Umeå university. Thank you for believing in us, we have had the opportunity to push ourself further than what we thought was possible. 
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Glossaries & Table of Contents
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Glossary}
+%Term definitions
+\newglossaryentry{valuefunction}{
+    name={$V$},
+    description={Value function}
+}
+
+
+\glsaddall
 \printglossary
 \clearpage
 \newpage
@@ -258,95 +276,56 @@ Department of Mathematics \& Mathematical Statistics\\
 %% Introduction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}\label{sec:Introduction}
-\epigraph{\enquote{Everything needs to be explained and nothing is clear.}}{---\textit{Prof. Dr. Andrea Pascucci,\\ University of Bologna}}
-%% Intro
-\subsection{Machine learning and AI}
-Over the past decade, machine learning has experienced rapid development, driven by advances in computational power, increased data availability, and progress in neural network architectures. These developments have enabled algorithms to solve increasingly complex problems in areas such as computer vision, natural language processing, and decision-making. One branch of machine learning that has received growing attention is reinforcement learning (RL), which focuses on learning optimal behaviour through interaction with an environment. Reinforcement learning is a subfield of machine learning concerned with sequential decision-making problems. In Reinforcement learning, an agent interacts with an environment and learns a strategy, known as a policy, by receiving rewards based on the actions it takes (p.26 \cite{Hands_on_machine_learning_with_Scikit-Learn})
+\noindent This section provides an overview of the company, followed by a presentation of the problem formulation and motivation for the study. It also includes a review of relevant literature.
 
-\subsection{Reinforcement Learning}
-Reinforcement learning addresses sequential decision-making problems where an agent interacts with an environment by taking actions and receiving feedback in the form of rewards. Through repeated interaction, the agent learns a strategy, known as a policy, that aims to maximize the cumulative reward over time. Unlike supervised learning, where models are trained on labelled datasets, reinforcement learning relies on trial-and-error exploration to discover effective strategies (p.2, \cite{sutton2018reinforcement}). This makes RL particularly suitable for problems where decisions must be made dynamically under uncertainty.\\
+\subsection{About Vermiculus}\label{sec: Vermiculus}
+Vermiculus is a software company that provides modern, high-performance technology solutions for global capital markets, specifically targeting exchanges, clearing houses, and central securities depositories (CSDs)  \footnote{See \url{https://www.vermiculus.se/}. Last accessed 11.03.26.}. This thesis is performed in cooperation with Vermiculus, Stockholm, ensuring close alignment between academic research and real-world financial market applications.
+
+\subsection{Problem description}
+Vermiculus customers operate in financial markets characterized by both opportunities and inherent risks. In derivatives trading, one commonly used risk management strategy is hedging, where the objective is to reduce exposure to price fluctuations by dynamically trading the underlying asset over time.
+\\\\
+A central challenge in this context is the accurate pricing and hedging of financial derivatives, such as options. A widely used method for pricing European options is the Black–Scholes model, which relies on several simplifying assumptions, including continuous-time trading, frictionless markets, constant volatility, and the absence of transaction costs.
+\\\\
+However, these assumptions do not fully reflect real market conditions. To address these limitations, this thesis explores an alternative approach based on deep reinforcement learning, which has the potential to learn adaptive hedging strategies directly from interactions with the market environment.
+
+\subsection{Aim of Thesis}
+The aim of this thesis is to investigate the use of deep reinforcement learning for option hedging in non-perfect markets. The deep reinforcement approach will be compared to the classical Black-Scholes delta hedging approach, leading to the following research question:  
 \\
-Many real-world decision problems can be formulated as stochastic control problems, where an agent must determine optimal actions in an uncertain and evolving environment. Traditionally, such problems have been studied using tools from dynamic programming and stochastic calculus. However, these methods often rely on strong assumptions or become computationally infeasible when the environment is complex or high-dimensional. Reinforcement learning offers a flexible alternative by approximating optimal strategies directly through interaction with simulated environments.\\
-\\
-In recent years, reinforcement learning has demonstrated remarkable success in several domains. A well-known example is the work by DeepMind, where RL combined with deep neural networks enabled algorithms to outperform human experts in complex games such as Go and Atari video games. These successes have increased interest in applying reinforcement learning to other domains involving complex sequential decisions, including finance.
-
-\subsection{Reinforcement Learning in finance}
-Financial markets present a natural setting for sequential decision-making under uncertainty. Tasks such as portfolio optimization, algorithmic trading, and risk management all involve making decisions over time based on evolving market conditions. One important problem in financial risk management is the hedging of derivative securities, such as options. Hedging strategies aim to reduce the financial risk associated with price movements in the underlying asset.
-
-\subsection{Options hedging}
-A classical approach to option hedging is based on the Black–Scholes framework, where the sensitivity of an option’s value with respect to the underlying asset price, known as the delta, is used to construct a hedging strategy. Delta hedging provides a theoretically optimal hedge under a set of idealized assumptions, including continuous trading and perfectly known model parameters. In practice, however, these assumptions rarely hold. Trading occurs at discrete time intervals, market conditions may deviate from model assumptions, and transaction costs may be present. As a result, classical hedging strategies may perform suboptimally in real-world settings.
-
-\subsection{Motivation and research objektive}
-Reinforcement learning offers a data-driven approach to learning hedging strategies without relying on explicit analytical solutions. By framing the hedging problem as a sequential decision-making task, an RL agent can learn to adjust a hedging position over time based on observed market states. Through interaction with a simulated market environment, the agent can learn strategies that aim to minimize hedging errors or costs.
-%% Literature Review
-\paragraph*{Literature review.}
-The main book used for reinforcement learning theory is the book \textit{Reinforcement Learning an introduction} by \cite{sutton2018reinforcement}. The method and application to hedging is related to the work of \cite{cao2020deephedging} in their article \textit{Deep Hedging of Derivatives Using Reinforcement Learning}.
-\todo{Expand}
-
-%% Aim/Research Questions
-\paragraph*{Aim of the thesis.}
-\todo{Goal of thesis}
-The objective of this thesis is to investigate whether reinforcement learning can be used to construct effective hedging strategies for options. In particular, RL-based strategies are compared to the classical Black–Scholes delta hedging approach in terms of hedging cost and performance.\\
-\\
-\todo{Or this approach for the aim of the theisis}
-The objective of this thesis is to investigate the use of reinforcement learning for option hedging. In particular, reinforcement learning-based hedging strategies are implemented and evaluated in a simulated market environment. The performance of these strategies is then compared to the classical Black–Scholes delta hedging approach in terms of hedging cost and risk
 
 \begin{compactenum}[{\bfseries RQ}1]
     \item \label{item:RQ1} Is it possible to outperform the Black-Scholes delta hedging approach with reinforcement learning?
-    \item \label{item:RQ2} Can we create an ensemble of different reinforcement learning agents, which increases the hedging performance even further?
-    \item \label{item:RQ3} Question 3?
+    \item \label{item:RQ2} Can we create a multi-agent system that perform better than the agents separately?
+    \item \label{item:RQ3} How is the agents performing if they have constraints?
 \end{compactenum}
 \newcommand{\RQone}{{\bfseries RQ}\ref{item:RQ1}}
 \newcommand{\RQtwo}{{\bfseries RQ}\ref{item:RQ2}}
 \newcommand{\RQthree}{{\bfseries RQ}\ref{item:RQ3}}
 
-You can later reference the research questions as follows: \RQone, \RQtwo, \RQthree.
+\subsection{Literature review}
+The main book used for reinforcement learning theory is the book \textit{Reinforcement Learning an introduction} by \cite{sutton2018reinforcement}. The method and application to hedging is related to the work of \cite{cao2020deephedging} in their article \textit{Deep Hedging of Derivatives Using Reinforcement Learning}.
+\\\\
+The theory of reinforcement learning dates back to the 1950´s. But the field did not gain significant attention until 2013, when DeepMind demonstrated that the system could learn to play arcade games created by Atari without any prior knowledge. The advances in computational power and the integration of deep neural networks have enabled reinforcement learning to solve complex high-dimensional problems, and it has been demonstrating success in many fields.
 
-%% Outline
-\bigskip
-This thesis is structured as follows:
-\todo{outline}
-In \Cref{sec:Theory}, we will discuss the relevant theory for this thesis. The section consists of 
-an introduction to typography (cf. \Cref{sec:Typography}) and notes on figures, tables and mathematical 
-environments in \Cref{sec:FiguresTables,sec:Equations}, respectively.
-
-After that, we will discuss the methodology and results in \Cref{sec:Results}. Therein, we\dots 
-Last but not least, we answer the research questions in \Cref{sec:Conclusion} and conclude 
-the findings of the thesis.
+\subsection{Limitations}
+The scope for this master thesis has been limited in several ways. First, only simulated data has been used. Second, the analysis is restricted to a single call option used for hedging purposes. Finally, the time horizon is fixed, with a predetermined number of trading days to maturity and exactly one re-hedging opportunity per day.
+\\\\
+Risks -  Training RL models is expensive, often requiring millions of interactions to learn effectively, which can be prohibitive for smaller projects.\\
+ Agents often require massive amounts of data to learn, making them less suitable for scenarios where data is expensive to collect\\
+ RL systems can be difficult to debug. Reward engineering—telling the AI what you want it to do—often involves a tedious, trial-and-error process.
+\newpage
 \section{Background}
-\subsection{Reinforcement learning} \label{sec:Reinforcement learning}
-This section aims to explain the core concepts of reinforcement learning and related theories.
-\\\\
-The fundamentals of reinforcement learning involve an \textit{agent} that interacts with an \textit{environment} by making \textit{observations}, taking \textit{actions}, and receiving \textit{rewards}. This process can be seen in Figure \ref{fig:2.1Reinforcement learning}:
+This section first provides the necessary financial background, followed by an introduction to reinforcement learning and an explanation of why it is suitable for this thesis.
 
-\begin{figure} [h!]
-    \centering
-    \includegraphics[width=0.5\linewidth]{Template/Figures/2.1Reinforcement.png}
-    \caption{The interaction between agent and environment, \cite{sutton2018reinforcement}, p.48}
-    \label{fig:2.1Reinforcement learning}
-\end{figure}
-\noindent where $S_t$ is the state, $R_t$ is the reward and $A_t$ is the action at time t. The objective of the agent is to learn a behavior that maximizes the cumulative reward over time, denoted as $G_t$. The formula for maximizing the expected discounted return can be seen below (\cite{sutton2018reinforcement}, p.55, eq 3.8):
-
-\begin{equation}
-    G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + ... + \gamma^{T-1} R_{T} 
-\end{equation}
-where T is the terminal date and $\gamma\in(0,1]$ is a discount factor. 
-\\\\
-In addition to the agent and environment, other important elements of reinforcement learning are a policy, a reward signal, and a value function. A policy $\pi$ defines how the agent behaves at a given state, in practice mapping states to actions, which is written as $A_t = \pi(S_t)$ at time $t$. When the reinforcement algorithm advances the policy updates. The reward signal specifies the goal of the learning process by providing immediate feedback on the agent’s actions. The value function, in contrast, evaluates the long-term desirability of states or actions by estimating expected future rewards (\cite{sutton2018reinforcement}, page 6).
-
-\subsection{Financial Background}
-This section provides an overview of key concepts in derivatives and hedging, related to this master thesis.   
+\subsection{Financial Background}\label{sec: Finance}
+This section introduces the core financial concepts underlying the thesis, focusing on options and hedging.
 
 \subsubsection{Options}
-Options are financial derivatives that grant the right, but not the obligation, to either buy or sell an asset at a predetermined price (the strike price) on or before a specified date. Options may therefore be either call options or put options, and they are further classified according to the flexibility of their exercise date. One of the simplest variants is the European option, which can only be exercised at maturity. A call option generates profit if the price of the underlying asset rises above the strike price, while a put option becomes profitable if the price falls below the strike price (\cite{investments}, p.51-52). It is also possible to write an option, meaning that an investor sells an option contract they do not own, thereby assuming the obligation to fulfill the contract terms should the buyer choose to exercise the option. In exchange for bearing this risk, the option writer receives a premium. These features give rise to four basic options positions: long call, short call, long put, and short put. 
+This thesis considers the hedging of a European call option. An option is a financial derivative that grant the right, but not the obligation, to either buy or sell an asset at a predetermined price (the strike price) on or before a specified date. Options may therefore be either call options or put options, and they are further classified according to the flexibility of their exercise date. One of the simplest variants is the European option, which can only be exercised at maturity. A call option generates profit if the price of the underlying asset rises above the strike price, while a put option becomes profitable if the price falls below the strike price (\cite{investments}, p.51-52). 
+\\\\
+It is also possible to write an option, meaning that an investor sells an option contract they do not own, thereby assuming the obligation to fulfill the contract terms should the buyer choose to exercise the option. In exchange for bearing this risk, the option writer receives a premium. These features give rise to four basic options positions: long call, short call, long put, and short put. 
 
-\subsubsection{Black-Scholes}
-Black-Scholes provides a theoretical framework for option pricing. Under this model, the value of an option is assumed to be affected by the following factors: 
-(i) the price of the underlying asset, 
-(ii) the strike price, 
-(iii) the volatility of the underlying asset, 
-(iv) the risk-free interest rate, and 
-(v) the time to maturity. The value of a European call option is given by the following formula (\cite{investments}, p.725, eq.21.1)
+\subsubsection{Black–Scholes Delta Hedging}
+The Black–Scholes model provides a theoretical framework for pricing European options. The value of a call option depends on the underlying asset price, strike price, volatility, risk-free interest rate, and time to maturity. The price is given by (\cite{investments}, p.725, eq.21.1):
 \begin{equation}
 C_0 = S_0 N(d_1) - X e^{-rT} N(d_2)
 \label{eq:bs_call}
@@ -368,312 +347,580 @@ r & = \text{risk-free interest rate (continuously compounded)}, \\
 T & = \text{time to expiration (in years)}, \\
 \sigma & = \text{standard deviation of the stock's continuously compounded return}.
 \end{align*}
+In addition to providing a pricing formula, the Black–Scholes model also enables the construction of a hedging strategy. This is done using the option’s delta, which measures how sensitive the option price is to changes in the underlying asset price. More specifically, delta indicates how much the option value changes for a small change in the underlying price.
+\\\\
+Delta hedging involves taking a position in the underlying asset that offsets this sensitivity. For example, if the delta of a call option is 0.5, the hedging strategy consists of holding 0.5 units of the underlying asset per option contract. In this way, small changes in the asset price are approximately canceled out, reducing the overall risk of the position.
+\\\\
+Since the delta evolves over time as market conditions change, the hedge must be continuously rebalanced. Under the assumptions of the Black–Scholes model, such as continuous trading, absence of transaction costs, and constant volatility, this dynamic rebalancing results in a theoretically perfect hedge.
+\\\\
+In practice, however, these assumptions do not hold, which creates the need for another approach.
 
-\subsubsection{Hedging}
-Hedging is a strategy aimed at limiting risk in investments and is commonly used when trading derivatives, such as options. To hedge risk connected to derivatives, traders can monitor various sensitivities of a derivative’s value, commonly referred to as the Greek letters. These sensitivities capture how the value of a position responds to changes in key market variables, such as the underlying asset price (delta), volatility (vega), the passage of time (theta), and interest rates (rho). One of the most important Greek letters is delta, which represents how sensitive the derivative is to a change in the underlying asset. In practice, traders often seek to maintain delta-neutral positions, thereby reducing exposure to small price movements in the underlying asset. Since the delta changes over time, a trader’s hedge must be adjusted through periodic rebalancing. In a frictionless market, where transaction costs and other market imperfections are absent, the theoretically optimal strategy involves continuous rebalancing. However, real markets are characterized by transaction costs and various trading frictions (\cite{cao2020deephedging}, p.1-2).
+\subsection{Machine Learning}\label{sec: Machine Learning}
+Over the past decade, machine learning has experienced rapid development, driven by advances in computational power, increased data availability, and progress in neural network architectures. These developments have enabled algorithms to solve increasingly complex problems in areas such as computer vision, natural language processing, and decision-making. One branch of machine learning that has received growing attention is reinforcement learning (RL), which focuses on learning optimal behaviour through interaction with an environment. Reinforcement learning is a subfield of machine learning concerned with sequential decision-making problems. In reinforcement learning, an agent interacts with an environment and learns a strategy, known as a policy, by receiving rewards based on the actions it takes (p.26 \cite{Hands_on_machine_learning_with_Scikit-Learn})
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Theory
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Theory}\label{sec:Theory}
-The outline of the theory section is as follows: Initially, the financial background is presented, then the fundamentals of reinforcement is discussed, and lastly the connection for using reinforcement learning in financial applications is introduced. 
-
-
-
-\subsubsection{Markov Decision Process}
-In reinforcement learning, the probability of the next state and the reward only depends on the current state and action. This characteristic is known as the Markov property and is defined as (\cite{sutton2018reinforcement} on page 48, equation 3.2): 
- \begin{equation}
-     p(s',r | s,a) = Pr(S_{t} = s', R_{t} = r | S_{t - 1} = s, A_{t-1} = a)
-     \label{eq:Markov Property}
- \end{equation}
-When the sets of states S, actions A, and rewards R are finite, together with this probability function, they define a finite Markov decision process (MDP). MDP is a mathematical framework for modeling sequential decision-making in environments with uncertain outcomes. In reinforcement learning, an action influences not only the immediate reward but also future outcomes, since the chosen action affects the state in which the agent will subsequently find itself. Consequently, decision-making in MDPs involves a trade-off between immediate and delayed rewards. The journey that the agent takes through the MDP is known as its trajectory. To guide the selection of a policy that maximizes cumulative reward, state value functions, $v_\pi(s)$, or action value functions, $q_\pi(s,a)$, are used. State value function, estimates the expected return from a given state, and the action value function, estimates the expected return from taking a specific action in a given state (\cite{sutton2018reinforcement}, page 71 eq 3.12.). \todo{Add about transition probabilities}
+\subsection{Reinforcement learning}\label{sec: Reinforcement Learning}
+Reinforcement learning addresses sequential decision-making problems where an agent interacts with an environment by taking actions and receiving feedback in the form of rewards. Through repeated interaction, the agent learns a strategy, known as a policy, that aims to maximize the cumulative reward over time. Unlike supervised learning, where models are trained on labeled datasets, reinforcement learning is based on trial-and-error exploration to discover effective strategies (p.2, \cite{sutton2018reinforcement}). This makes RL particularly suitable for problems where decisions must be made dynamically under uncertainty.\\
+\\
+Many real-world decision problems can be formulated as stochastic control problems, where an agent must determine optimal actions in an uncertain and evolving environment. Traditionally, such problems have been studied using tools from dynamic programming and stochastic calculus. However, these methods often rely on strong assumptions or become computationally infeasible when the environment is complex or high-dimensional. Reinforcement learning offers a flexible alternative by approximating optimal strategies directly through interaction with simulated environments.\\
+\\
+In recent years, reinforcement learning has demonstrated remarkable success in several domains. A well-known example is the work by DeepMind, where RL combined with deep neural networks enabled algorithms to outperform human experts in complex games such as Go and Atari video games. These successes have increased interest in applying reinforcement learning to other domains involving complex sequential decisions, including finance.
 
 
-\subsubsection{Value Functions}
+\subsection{Reinforcement learning in finance}\label{sec: Reinforcement learning in finance}
+Financial markets present a natural setting for sequential decision-making under uncertainty. Tasks such as portfolio optimization, algorithmic trading, and risk management all involve making decisions over time based on evolving market conditions. One important problem in financial risk management is the hedging of derivative securities, such as options. Hedging strategies aim to reduce the financial risk associated with price movements in the underlying asset.
 
-The framework for a Markov decision process is defined by the state-value function. $v_\pi(s)$ as the expected value when an agent stands in state $s$ and following the policy $\pi$:
- \begin{equation}
-     v_\pi(s) = \mathbb{E}[G_t | S_t = s ] = \mathbb{E}[\sum_{k=0}^\infty \gamma ^k R_{t+k+1 } | S_t = s] \label{eq:value function 3.10}
- \end{equation}
-where $ \mathbb{E}_\pi[.]$ denotes the expected value of a random variable given that the agent follows policy $\pi$ and $t$ at any time step, and $\gamma \in [0,1]$ is the discount factor which weights immediate rewards against future rewards. 
+\newpage
+\section{Theory} \label{sec: theory}
+This section will explain the fundamental theory needed to understand the method explained in Section \ref{sec: Method}. Section \ref{sec: Reinforcement learning framework} explains the fundamental parts of Reinforcement learning where agent, environment, reward, state and action are defined. Section \ref{sec: Markov decision procecss} explain the Markov decision process and Markov property, Section \ref{sec: Return and Value functions} will explain state-value and action-value functions together with the reward function.
+Section \ref{sec:Bellman equation} goes into how the state- and action value function are connected and how they can be explained recursive of each other, called the Bellman equation, the Bellman equation is one of the core concepts in Reinforcement learning.
+
+\subsection{Reinforcement learning framework}\label{sec: Reinforcement learning framework}
+\todo[]{What is reinforcement learning at a fundamental level}
+\noindent This section aims to explain the fundamentals of Reinforcement Learning, where Section \ref{sec:Elements of reinforcement learning} aims to explain the elements of reinforcement learning such as agent, environment, reward, state and action. Section \ref{sec:Core components, 3.1} aim explain the core components of reinforcement learning where the policy and reward signal.
+
+\subsubsection{Elements of Reinforcement learning}\label{sec:Elements of reinforcement learning}
+Reinforcement learning is a framework for modeling sequential decision-making problems.
+The fundamentals of reinforcement learning involve an \textit{agent} that interacts with an \textit{environment} by making \textit{observations}, taking \textit{actions}, and receiving \textit{rewards}. This process can be seen in Figure \ref{fig:2.1Reinforcement learning}, and it will be explained more in detail later in the thesis.
+
+\begin{figure} [h!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Template/Figures/2.1Reinforcement.png}
+    \caption{The interaction between agent and environment, \cite{sutton2018reinforcement}, p.48}
+    \label{fig:2.1Reinforcement learning}
+\end{figure}
+\noindent At each timestep t, the agent observes the current state, $S_t$, selects and action, $A_t$, and receives feedback in form of a reward, $R_t$. As a consequence of the action, $A_t$, the environment transitions to a new state, $S_{t+1}$. This interaction continues over over a sequence of time steps and the end of a time sequence form an episode. This interaction continues over multiple episodes and form the basis of the learning process. The environment will be explained more in detailed under Section \ref{sec: Enviroment}, and the agent will be explained more in Section \ref{sec:Agents}.
 \\
 \\
-The action-value function function, $q_\pi(s,a)$ is the expected value if the agents takes an action, $a$, from state, $s$, and following the policy $\pi$: 
+The objective of the agent is to learn a behavior, also known as a policy, that maximizes the cumulative reward over time. How the reward is defined and evaluated will be described in Section \ref{sec: Return and Value functions}, and how the policy is defined is described in Section \ref{sec: policy}
 
 
+\subsubsection{Core components}\label{sec:Core components, 3.1}
+Several key components define a reinforcement learning problem. 
+
+\begin{itemize}
+    \item \textbf{State, ($S_t$):} A representation of the current situation of the environment.
+    \item \textbf{Action, ($A_t$):} A decision taken by the agent that decide/influence the next state.
+    \item \textbf{Reward, ($R_t$):} A numerical signal that evaluates the immediate outcome of an action.
+    \item \textbf{Policy, ($\pi$):} A mapping from states to actions describing the behavior of the agent. The policy can be expressed as a probability distribution over actions given a state. 
+\end{itemize}
+
+
+\subsubsection{Policy}\label{sec: policy}
+The policy is a central object in reinforcement learning, it determines how the agent behaves. During training, the agent seeks to improve its policy in order to maximize the expected return defined in Equation \ref{eq:Reward function}. 
+The policy, denoted as $\pi$, defines how the agent behaves at a given state, in practice mapping states to actions. The policy is formally defined as the probability distribution over actions for every possible state (\cite{DeepRLHandsOn}, p.22): 
+\begin{equation}\label{eq:policy}
+    \pi(a|s)=P[A_t=a|S_t=s]
+\end{equation}
+where the expression describes the probability that the agent selects action $a$ when it is in state $s$.
+\\\\
+Policies can be deterministic or stochastic. A deterministic policy always selects the same action for a given state, meaning the action is directly determined by the state. In contrast, a stochastic policy assigns probabilities to different actions, allowing the agent to select among several possible actions according to a probability distribution (\cite{DeepRLHandsOn}, p.22).
+\\\\
+During training in reinforcement learning, the policy is continuously updated as the agent interacts with the environment. To learn an optimal policy, the agent must have a balance between exploration and exploitation (\cite{cao2020deephedging}, p.5). The agent ultimately searches for a policy that maximizes the expected value of rewards, as seen in Equation \ref{eq:Reward function} (\cite{kolm2019dynamicreplication}, p. 161).
+
+
+\subsection{Markov Decision Process}\label{sec: Markov decision procecss}
+\todo[]{How do we mathematically model the environment}
+\noindent To be able to analyze reinforcement learning problems, a mathematical framework is required. This is provided to us by the Markov Decision Process (MDP), which models sequential decision making in environments with uncertain outcomes. In such environments, outcomes are partly controlled by a decision maker and partly determined by randomness. In reinforcement learning, MDPs form the theoretical foundation for representing the environment and defining the agent’s objective  \footnote{See \url{https://www.sciencedirect.com/topics/computer-science/markov-decision-process}. Last accessed 12.03.26}.
+\\\\
+Within this framework, the agent acts as the decision maker and aims to learn a policy that maximizes the expected cumulative reward over time. One of the challenges in reinforcement learning is that an action influences not only the immediate reward. but also future outcomes, since the chosen action affects the state in which the agent will subsequently find itself. As a result, decision-making in MDPs involves a trade-off between immediate and delayed rewards (\cite{sutton2018reinforcement}, p.47).
+\subsubsection{Tuple (S, A, P, R)}
+In reinforcement learning, the agent interacts with an environment over a sequence of discrete time steps. At each time step $t$, the agent observes a state $S_t$, selects an action $A_t$, receives a reward $R_{t+1}$, and transitions to a new state $S_{t+1}$. This interaction generates a sequence known as a trajectory. Formally, a MDP is defined as a tuple:
+\[
+(S, A, P, R)
+\]
+where
+\begin{itemize}
+    \item $S$ is the set of states,
+    \item $A$ is the set of actions,
+    \item $P$ denotes the transition probabilities, and
+    \item $R$ represents the reward function.
+\end{itemize}
+The dynamics of a Markov Decision Process (MDP) is described by the probability of transitioning to a new state and receiving a reward, given the current state and action (\cite{sutton2018reinforcement} p. 48, eq 3.2):
+\begin{equation} \label{eq: MDP dynamics}
+    p(s', r \mid s, a) = \Pr(S_t = s', R_t = r \mid S_{t-1} = s, A_{t-1} = a).
+\end{equation}
+From this function we can also define the state transition probability (\cite{sutton2018reinforcement} p. 49, eq 3.4):
 \begin{equation}
-    q_\pi(s,a) = \mathbb{E}[G_t | S_t = s, A_t = a] = \mathbb{E}[\sum_{k=0}^\infty \gamma ^k R_{t+k+1 } | S_t = s, A_t = a] 
+    p(s' \mid s, a) = \Pr(S_t = s' \mid S_{t-1} = s, A_{t-1} = a),
+\end{equation}
+and the expected reward function (\cite{sutton2018reinforcement} p. 49, eq 3.5):
+\begin{equation}
+    r(s,a) = \mathbb{E}[R_t \mid S_{t-1} = s, A_{t-1} = a].
+\end{equation}
+In a finite MDP, the sets of state, actions and rewards, denoted by $\mathcal{S}$, $\mathcal{A}$ and $\mathcal{R}$, respectively contain a finite number of elements. The variables $R_t$ and $S_t$ are treated as random variables, and $s' \in \mathcal{S}$ denotes the next possible state. 
+
+\subsubsection{Markov Property}
+A key assumption underlying MDP's is the Markov property, which states that the future evaluation of the system depends only of the current state and action, not the past history (\cite{sutton2018reinforcement}, p.49). Formally, this implies that the conditional probability of the next state $S_{t+1}$ and reward, $R_{t+1}$, depends only on the present state, $S_t$, and action, $A_t$, as seen in Equation \ref{eq: MDP dynamics}. This assumption significantly simplifies the learning problem, as the agent does not need to consider the entire sequence of past events when making decisions.
+
+\subsection{Return and Value functions} \label{sec: Return and Value functions}
+\todo[]{How do we evaluate these decisions?}
+In reinforcement learning, the objective of the agent is to maximize the cumulative reward over time. To evaluate how good a particular state or action is, value function are introduced. These functions quantify return and form the foundation of decision making in reinforcement learning. 
+
+\subsubsection{Return and Reward Signal}\label{sec:Return and Reward Signal}
+To be able to determine how well a policy operates, the agent will evaluate the reward signal.
+The reward signal specifies the objective of the learning process by providing feedback on the agent’s actions. The reward is obtained periodically in the environment, where the agent receives a numerical value. The reward signal therefore indicates which outcomes are desirable or undesirable and guides the learning process. If an action results in a low or unfavorable reward, the policy may be updated so that the agent selects a different action in similar situations in the future (\cite{sutton2018reinforcement}, p. 6).
+\\\\
+In contrast, the value function evaluates the long-term desirability of states or actions by estimating the expected cumulative future reward (\cite{sutton2018reinforcement}, p. 6). The reward signal, defined as $R_{t+1}$, provides immediate feedback to the agent after taking an action. The overall objective is however not to maximize individual rewards, but the cumulative reward over time, this is referred to as the discounted sum of future rewards, $G_t$.
+\\
+\\
+The return at time step $t$ is defined as:
+\begin{equation}\label{eq:Reward function}
+    G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + ... + \gamma^{T-1} R_{T} 
+\end{equation}
+where T is the terminal time and $\gamma\in(0,1]$ is a discount factor. The discount factor determines the relative importance of future rewards relative to immediate rewards (\cite{sutton2018reinforcement}, p.55, eq 3.8). A discount factor close to one places more weight on future rewards, while smaller value prioritizes short term gains. 
+
+\subsubsection{State-Value function}\label{sec:State-Value function}
+The framework for a Markov decision process is defined by the state-value function, $v_\pi(s)$, as the expected value when an agent is in state $s$ and follows the policy $\pi$. The value function is defined as 
+ \begin{equation}
+     v_\pi(s) = \mathbb{E}_\pi[G_t | S_t = s ]  \label{eq:value function 3.10}
+ \end{equation}
+where $G_t$ is the reward function, equation \ref{eq:Reward function}. 
+ $ \mathbb{E}_\pi[.]$ denotes the expected return of a random variable given that the agent follow policy $\pi$, at any time step $t$ (\cite{sutton2018reinforcement}, p.70, eq.3.12).
+
+\subsubsection{Action-Value function}\label{sec:Action-Value function}
+While the state-value function evaluates states, the action-value function evaluates the state-action pairs. It is defined as the expected value if the agents takes an action, $a$, from state, $s$, and following the policy $\pi$. It is defined as 
+\begin{equation}
+    q_\pi(s,a) = \mathbb{E}_\pi[G_t | S_t = s, A_t = a]  
     \label{eq: action-value function 3.11}
 \end{equation}
+where $G_t$ is the reward function, \ref{eq:Reward function}. $ \mathbb{E}_\pi[.]$ denotes the expected return of a random variable given that the agent follow policy $\pi$, at any time step $t$ (\cite{sutton2018reinforcement}, p.70, eq.3.13)
+The action-value function is often refer to as the q-value. 
+
+\subsubsection{Connection between the Value functions}
+The state and action value are closely related, the value of a state can be expressed as the expected value on the action-value function under the given policy: 
+\begin{equation}\label{eq: value function conditional on space,action}
+    v_\pi(s) = \sum \pi(a|s)q_\pi(s,a).
+\end{equation}
+Hence, the value function can be expressed as the return conditional of the current space, action, weighted by the probability of taking each action (law of total probability) .
+
+\subsubsection{Transition to Bellman equation}
+Although value function provide a way to evaluate states and action, computing them directly is often infeasible, especially in complex environments. Instead, value function can be expressed recursive in complex environments using the Bellman equation which forms the basis for many reinforcement learning algorithms. This is introduced in the next Section.
 
 
-
-\subsubsection{Bellman equation}\label{sec:Bellman equation}
-
-The Bellman equation provides the connecting web of our subspace, i.e., the subspace that the agent needs to transverse(?). The Bellman equation allows us to convert the information of the environment into an improvement of the agent's behavior. It is a universal concept in the world of sequential decision-making. 
+\subsection{The Bellman equation}\label{sec:Bellman equation}
+\todo[]{Why RL is solvable recursively}
+The Bellman equation provides a recursive relationship for value functions and is central to reinforcement learning. It expresses the value of a state as the expected immediate reward plus the discounted value of subsequent states. It allows us to convert information of the environment into improvements of the agents behavior. The value function can be expressed recursively, and the Bellman equation breaks down the state in the initial reward plus the discounted value of the later rewards.
 \\
 \\
-The Bellman equation connects all the state values, it allows us to convert information of the environment into improvements of the agents behavior. The value function can be expressed recursive, and the bellman equation breaks down the state in the imitiate reward plus the discontinued value of the later rewards. For the state value funciton, $v_\pi(s)$ it¨s defined as:
-
+To derive the Bellman equation, we begin with the definition of the return from Equation \ref{eq:Reward function}:
 \begin{equation}
-    v_\pi(s) = \mathbb{E}[G_t | S_t = s] = \sum_a \pi(a|s) \sum _{s´,a}p(s',r|s,a) [r+\gamma v_\pi(s')]\label{eq: Bellman-equation value function 3.12}
-\end{equation} 
-where its implicit that the action, a, are taken from the set $ A(s)$. and the next state $s'$ are taken from the set $S$, and the rewards, $r$, are taken from the set $R$.(\cite{sutton2018reinforcement}, page 70 eq 3.12).
-The equations is a sum of all three valiables, are for each tripple, we compute its probability, $\pi(a|s)p(s',r|s,a)$
-\\
-
-\subsubsection{Optimal value function}
-Solving reinforcement learning tasks means finding a policy that achives a lot of rewards, for a finite MDP. There exists an optimal policy, (could be more than one), its denoted $\pi_*$. The optimal state valur function is deoted $ v_*$ and defined as
-The optimal 0
+    G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots
+\end{equation}
+This expression can be rewritten recursively as
 \begin{equation}
-    v_*(s) = max_\pi v_\pi(s),
+\label{eq: recursive return}
+    G_t = R_{t+1} + \gamma G_{t+1}
 \end{equation}
-for all $ s\in S$.
-The optimal policy for the action-value function is defined as 
+and using the definition of the state-value function,
 \begin{equation}
-        q_*(s,a) = max_\pi q_\pi(s,a),
+    v_\pi(s) = \mathbb{E}_\pi[G_t \mid S_t = s],
 \end{equation}
-for all $ s\in S$ and $a\in A$. $q_*$ can be written in terms of $v_*$:
- 
+we can condition on the first action taken:
 \begin{equation}
-    q_*(s,a) = \mathbb{E}[R_{t+1} + \gamma v_*(S_{t+a} | S_t = s, A_t = a] = \sum_a \pi(a|s) \sum _{s´,a}p(s',r|s,a) [r+\gamma v_\pi(s')]\label{eq: Bellman-equation action_value function 3.15}
+    v_\pi(s) = \sum_a \pi(a \mid s) \mathbb{E}_\pi[G_t \mid S_t = s, A_t = a].
+\end{equation}
+Substituting the recursive expression for the return from Equation \ref{eq: recursive return}, we obtain:
+\begin{equation}
+    \mathbb{E}_\pi[G_t \mid S_t = s, A_t = a]
+    = \mathbb{E}_\pi[ R_{t+1} + \gamma G_{t+1} \mid S_t = s, A_t = a].
+\end{equation}
+By linearity of expectation, this can be written as:
+\begin{equation}
+    = \mathbb{E}_\pi[ R_{t+1} \mid S_t = s, A_t = a]
+    + \gamma \mathbb{E}_\pi[ G_{t+1} \mid S_t = s, A_t = a].
 \end{equation}
 
-\subsubsection{Dynamic Programming}  
-Dynamic programming refer to algorithms that can find optimal policies, given a perfect model of the environment.  It refers to the algorithms used to find optimal policies which have complete knowledge of the environment as a Markov decision process. In other words, Dynamic Programming has access to $p(s', r | s, a)$ (policy). (An unrealistic assumption in the real world)
-
-\subsubsection{Policy evaluation}
-Compute the state value function, $v_\pi(s)$ or action value function, $q_\pi(s,a)$ for a given policy, $\pi$, for all states or state action pairs, under some MDP (Markov decision process). 
-Starting by randomly initializing the state values, and then calculating \begin{equation}
-    V(s) \xleftarrow[]{} \sum_{a\in A(s)}\pi(a | s) \sum_{s'\in S,  r \in R} p(s', r | s, a)´[r + \gamma V(s')].
+The first term corresponds to the expected immediate reward, while the second term represents the expected future return. Using the Markov property, the future return depends only on the next state \( S_{t+1} \), which allows us to write:
+\begin{equation}
+    \mathbb{E}_\pi[ G_{t+1} \mid S_t = s, A_t = a]
+    = \mathbb{E}_\pi[ v_\pi(S_{t+1}) \mid S_t = s, A_t = a].
 \end{equation}
-(V(s) is capital since we estimate the true values)
-One repeat over all states is called a sweep, and this is done until the state values converge. (We use the Bellman equation, \ref{eq: Bellman-equation value function 3.12}, and it always converges for an mdp). 
-\textbf{Policy Improvement}
-\subsubsection{Generalized Policy Iteration}
-\epigraph{\enquote{GPI refers to the general idea of letting policy evaluation and policy imporovement process interact, independent of the granularity and other detalis of the two processes. Almost all reinforcement learning methods are well described as GPI}}{---\textit{Sutton, Barto\\ Reinforcement learning book}}
-GPI is a class of algorithms: \\
-\textbf{Policy improvement:} To find $\pi_*$ and $v_*$, \begin{equation}
-    \pi_0 \xrightarrow{\mathbb{E}} v_{\pi_0} \xrightarrow{I} \pi_1 \xrightarrow{\mathbb{E}} v_{\pi_1} \xrightarrow{I} \pi_2
- \xrightarrow{\mathbb{E}}\dots \xrightarrow{I}.
- \end{equation}
-This is done until the value function stops changing. \\
-\textbf{Value iteration}: Another GPI algorithm.\\
-\\
 
-\subsubsection{Monte Carlo Methods}
-In dynamic programming, it is assumed that there is perfect knowledge of the environment. When such a model is unavailable or impractical to obtain, Monte Carlo methods provide an alternative approach based solely on sampled experience. 
+Substituting this back, we obtain:
+\begin{equation}
+    \mathbb{E}_\pi[G_t \mid S_t = s, A_t = a]
+    = \mathbb{E}_\pi[ R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s, A_t = a].
+\end{equation}
+
+Finally, by incorporating the transition probabilities of the MDP, the Bellman equation for the state-value function becomes:
+\begin{equation}
+\label{eq: Bellman-equation value function}
+    v_\pi(s) = \sum_a \pi(a \mid s) \sum_{s',r} p(s', r \mid s, a) \left[ r + \gamma v_\pi(s') \right].
+\end{equation}
+
+The Bellman equation shows that the value of a state is equal to the expected return obtained by taking an action according to the policy and then following the same policy thereafter. This recursive structure forms the foundation for many reinforcement learning algorithms.
+
+
+
+\subsection{Bellman optimality}\label{sec: Bellman optimality}
+\todo[]{How do we compute/approximate the value function}
+The goal in reinforcement learning is to find a policy that maximizes the expected cumulative reward. For a finite Markov Decision Process, there exists at least one optimal policy, denoted by \( \pi_* \), which achieves the highest value for all states.
 \\\\
-Monte Carlo methods are model-free and rely on observed episodes consisting of states, actions, and rewards. Instead of using a known model, these methods estimate value functions by computing sample averages of returns, thereby approximating expected future rewards (\cite{sutton2018reinforcement}, p.91). The update rule when using Monte Carlo methods can be seen bellow: 
-
+The optimal state-value function is defined as:
 \begin{equation}
-    Q(S_{t}, A_{t}) \xleftarrow{} Q(S_{t}, A_{t}) + \alpha(G_{t} - Q(S_{t}, A_{t}))
-    \label{eq: Monte Carlo for Q function}
+    v_*(s) = \max_\pi v_\pi(s), \quad \forall s \in \mathcal{S},
 \end{equation}
-where $\alpha \in (0,1]$ is a constant parameter. In Monte Carlo methods the update is performed after an episode is completed.
-
-
-\subsubsection{On- and Off-Policy methods}
-In reinforcement learning, the difference between on-policy and off-policy methods lies in the relationship between the policy used to generate the data  and the policy being evaluated/improved. In on-policy learning, the agent evaluates and improves the same policy that it uses to interact with the environment. Consequently, learning is based directly on the actions taken by the current policy. In contrast, off-policy learning separates these roles by allowing the agent to learn about one policy, referred to as the target policy, while following a different policy, known as the behavior policy, to generate data. This separation makes the methods more powerful and general, but the downside is that they are often of greater variance and are slower to converge (\cite{sutton2018reinforcement}, p.103).
-
-\subsubsection{Temporal Difference Learning}
-
-GPI has two components, evaluation and improvement. The adjustment is within evaluation, where we 
-\begin{itemize}
-    \item We may study an MRP (markov reward process) over an MDP (markov decition process)
-    \item We may reference to V(s) instead of Q(s,a) 
-\end{itemize}
-TD is an adjusted version of Monte Carlo. The disabling feature of monte carlo is that an episode must be completed before the values can be updated. If an episode is long, learning might be slow. \\
+and represents the maximum expected return achievable from state \( s \) (\cite{sutton2018reinforcement}, p.63, eq.3.15).
+\\\\
+Similarly, the optimal action-value function is defined as:
+\begin{equation}
+    q_*(s,a) = \max_\pi q_\pi(s,a), \quad \forall s \in \mathcal{S}, \, a \in \mathcal{A}.
+\end{equation}
+The optimal value functions satisfy the Bellman optimality equations (\cite{sutton2018reinforcement}, p.62, eq.3.16). For the state-value function, this can be written as:
+\begin{equation}
+\label{eq: bellman optimality v}
+    v_*(s) = \max_a \sum_{s',r} p(s', r \mid s, a) \left[ r + \gamma v_*(s') \right].
+\end{equation}
+This equation shows that the value of a state is equal to the maximum expected return obtainable by choosing the best possible action and thereafter acting optimally (\cite{sutton2018reinforcement}, p.~63, eq.3.19).
 \\
-\textbf{n-step TD:} In eq \ref{eq: Monte Carlo for Q function}, replace $G_t$ with $$R_{t+1}+Q(S_{t+1}A_{t+1})$$ with first observation at $t+1$. (\cite{cao2020deephedging} p.7 eq 3) 
+\\
+The corresponding Bellman optimality equation for the action-value function is given by:
+\begin{equation}
+\label{eq: bellman optimality q}
+    q_*(s,a) = \sum_{s',r} p(s', r \mid s, a) \left[ r + \gamma \max_{a'} q_*(s',a') \right].
+\end{equation}
+This formulation expresses the value of taking action \( a \) in state \( s \), followed by optimal actions in subsequent states (\cite{sutton2018reinforcement}, p.~64, eq.3.20).
+\\
+\subsubsection{Transition to approximating Bellman optimality}
+The Bellman optimality equations are fundamental, as they provide a recursive characterization of the optimal value functions. Many reinforcement learning algorithms aim to approximate or solve these equations in order to identify optimal policies.
+\\
+\\
+The Bellman optimality equations provide a powerful characterization of the optimal value functions. In principle, solving these equations yields the optimal policy for a given reinforcement learning problem. 
+\\\\
+However, obtaining an exact solution typically relies on several strong assumptions. First, the transition dynamics of the environment must be known. Second, the state and action spaces must be sufficiently small to allow for tractable computation. Third, the problem must satisfy the Markov property. 
+\\\\
+In practice, these assumptions are rarely fully satisfied, especially in complex or high-dimensional environments. As a result, it is generally not feasible to solve the Bellman optimality equations exactly. Instead, various approximation methods are employed to estimate value functions and derive near-optimal policies (\cite{sutton2018reinforcement}, p.~66).
 
-\begin{itemize}
-    \item $n=1$: values update on a single reward. 
-    \item $n = \infty $:is identical to MC.
-\end{itemize}
+\subsection{Estimation of the Bellman equations}
+\todo[]{How do we compute/approximate the value function}
+Several approaches have been developed to approximate the value functions implied by the Bellman equations. In the following Sections, Dynamic Programming, Monte Carlo methods, Temporal Difference learning, and Q-learning are introduced. These methods represent different techniques for estimating Bellman and form the basis for many reinforcement learning algorithms.
+\subsubsection{Dynamic Programming}
 
-TD's criteria: maximum likelihood of the Markov reward process. MD's criteria: Minimize the mean square error. 
-
-\textbf{On policy TD control:} n-step SARSA: State,action, rewards, state action. 
-
+Dynamic Programming (DP) refers to a set of methods used to find optimal policies which have complete knowledge of the environment, as an MDP. In other words, DP is used to solve reinforcement learning problems when a complete model of the environment is available. In particular, DP assumes that the transition probabilities \( p(s',r \mid s,a) \) and the reward function (equation \ref{eq: expected reward function}) are known. Under these assumptions, the Bellman equations can be solved exactly.
+\\\\
+Two central components of dynamic programming are \textbf{policy evaluation} and \textbf{policy improvement}. Policy evaluation consists of computing the state-value function \( v_\pi(s) \) for a given policy \( \pi \), typically by iteratively applying the Bellman expectation equation until convergence (\cite{sutton2018reinforcement}, p.~74). Policy improvement, on the other hand, updates the policy by selecting actions that maximize the expected return based on the current value function (\cite{sutton2018reinforcement}, p.~80).
+\\\\
+By alternating between policy evaluation and policy improvement, the policy can be iteratively refined. This process is known as \textbf{policy iteration} and is guaranteed to converge to an optimal policy in finite Markov Decision Processes
+\begin{equation}
+    \pi_0 \xrightarrow{\mathbb{E}} v_{\pi_0} \xrightarrow{I} \pi_1 \xrightarrow{\mathbb{E}} v_{\pi_1} \xrightarrow{I} \pi_2
+ \xrightarrow{\mathbb{E}}\dots \xrightarrow{I} \pi_* \xrightarrow{\mathbb{E}} v_{\pi_*}.
+ \end{equation}
+Where $ \xrightarrow{\mathbb{E}}$ denotes the policy evaluation and $ \xrightarrow{\mathbb{I}}$ denotes the policy improvement (\cite{sutton2018reinforcement}, p.96).
+\\\\
+An alternative approach in DP is \textbf{value iteration}, which directly applies the Bellman optimality equation to update the value function. Instead of evaluating a fixed policy, value iteration combines evaluation and improvement into a single update step:
+\begin{equation}
+    v_{k+1}(s) = \max_a \sum_{s',r} p(s',r \mid s,a)\left[r + \gamma v_k(s')\right].
+\end{equation}
+(\cite{sutton2018reinforcement}, p.~100, eq.~4.10).
+While dynamic programming provides a theoretically sound framework for solving reinforcement learning problems, it is rarely applicable in practice. The requirement of a known environment model and the need to perform updates over the entire state space make DP infeasible for large or complex problems.
+\\\\
+These limitations motivate the development of model-free methods, which can learn directly from experience without requiring knowledge of the environment dynamics. Such approaches are introduced in the following Sections.
+\newpage
+\subsubsection{Monte Carlo Methods}
+Monte Carlo (MC) methods address some of the key limitations of dynamic programming by removing the requirement of a known environment model. In many real-world problems, the model would need to perform updates on the entire state space, making it unachievable in large, and complex problems.  Instead of relying on transition probabilities, MC methods learn value functions directly from sampled experience (\cite{sutton2018reinforcement}, p.~91).
+\\\\
+In MC methods, value estimates are based on complete episodes of interaction with the environment. After an episode has terminated, the return \( G_t \) can be computed for each visited state, and the value function is updated as an average of the observed returns. In this way, MC methods learn directly from trajectories generated by following a policy. This approach makes MC methods model-free, as they do not require knowledge of the transition dynamics \( p(s',r \mid s,a) \). Instead, they rely solely on observed trajectories generated by following a policy.\\
+\begin{wrapfigure}{r}{0.35\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{Template/Figures/Figures Theory/monte carlo.png}
+    \caption{One Monte Carlo episode, visualizing how returns are assigned to visited states after an episode has terminated.}
+    \label{fig:Monte Carlo iteration}
+\end{wrapfigure}
+A common approach is the every-visit Monte Carlo method, where the value function is updated as:
+\begin{equation}
+    V(S_t) \leftarrow V(S_t) + \alpha \left[ G_t - V(S_t) \right],
+\end{equation}
+where \( \alpha \) is a constant step-size parameter (\cite{sutton2018reinforcement}, eq.~6.1, p.~144).
+\\\\
+The key characteristic of Monte Carlo methods is that updates can only be performed after an episode has ended, since the return requires knowledge of all future rewards within that episode (\cite{cao2020deephedging}, p.~7). This is visualized in Figure \ref{fig:Monte Carlo iteration}. This can lead to high variance in the estimates, especially in problems with long episodes, as the return depends on the entire sequence of rewards.
+Despite this, MC methods have the advantage of producing unbiased estimates of the value function, since they use actual observed returns rather than bootstrapped estimates.
+\\\\
+In summary, Monte Carlo methods provide a conceptually simple approach to learning value functions from experience. However, their reliance on complete episodes and the resulting high variance motivate the development of more efficient methods. This leads to Temporal Difference learning, which combines ideas from both dynamic programming and Monte Carlo methods.
+\newpage
+\subsubsection{Temporal Difference Learning}
+\begin{wrapfigure}{r,b}{0.35\textwidth}
+    \centering
+    \includegraphics[width=1\linewidth]{Template/Figures/Figures Theory/1 step TD.png}
+    \caption{TD iteration}
+    \label{fig:1 step TD}
+\end{wrapfigure}
+Temporal Difference (TD) learning combines key ideas from both dynamic programming and Monte Carlo methods. Like Monte Carlo methods, TD learning is model-free and learns directly from experience. At the same time, it incorporates the recursive structure of the Bellman equation, similar to dynamic programming, (\cite{sutton2018reinforcement}, p.~74).
+However, TD learning does not need to wait until the end of an episode to update its estimates like Monte Carlo (\cite{sutton2018reinforcement}, p.~119). Instead, TD methods can learn after a defined time step. TD is similar to dynamic programming, where value functions are updated using other value estimates derived from the Bellman equation 
+\\\\
+The main idea of TD learning is to update value estimates based on other learned estimates, rather than waiting for the final outcome of an episode like Monte Carlo, visualized in figure \ref{fig:1 step TD}. This is known as \textit{bootstrapping} (\cite{sutton2018reinforcement}, p.~119).
+\\\\
+Instead of using the full return \( G_t \), TD methods use a one-step estimate of the return (\cite{sutton2018reinforcement}, p.~144):
+\begin{equation}
+    R_{t+1} + \gamma v_\pi(S_{t+1}).
+\end{equation}
+This leads to TD(0), or \textit{one-step} TD, which is the simplest TD-method. The update rule for the state-value function is defined as:
+\begin{equation}
+    v_\pi(S_t) \leftarrow v_\pi(S_t) + \alpha \left[\underbrace{ R_{t+1} + \gamma v_\pi(S_{t+1})}_{\textit{estimate of the return}} - v_\pi(S_t) \right],
+\end{equation}
+where \( \alpha \in (0,1] \) is the learning rate (\cite{sutton2018reinforcement}, eq 6.1, p.~144).
+\\\\
+The term in brackets,
+\begin{equation}
+    \delta_t = R_{t+1} + \gamma v_\pi(S_{t+1}) - v_\pi(S_t),
+\end{equation}
+is referred to as the \textit{temporal difference error} (\cite{sutton2018reinforcement}, eq. 7.10, p.178). It represents the difference between the predicted value and a one-step improved estimate.
+\\\\
+Compared to Monte Carlo methods, TD learning has lower variance, since it does not rely on full episode returns. However, this comes at the cost of introducing some bias, as the updates depend on current value estimates. In summary, TD learning provides a more efficient and practical approach to estimating value functions, particularly in problems with long or continuing tasks. This framework forms the basis for many modern reinforcement learning algorithms, including Q-learning, which is introduced in the next Section.
 
 \subsubsection{Q-learning}\label{sec:Q-learning}
+\todo[]{Bellman in action}
+Q-learning is a model-free reinforcement learning algorithm used to learn the optimal action-value function. Unlike previous methods, which focus on evaluating a given policy, Q-learning directly aims to approximate the optimal policy by learning the optimal action-value function \( q_*(s,a) \). Q-leaning is off-policy, which is explained further down in the Section. By using the Bellman equation the Q-values\footnote{Also known as action-values \ref{sec:Action-Value function}} are updated iteratively \footnote{See \url{https://www.sciencedirect.com/topics/computer-science/deep-q-network}. Last accessed 01.04.26.}.
+\\
+\\
+The method is based on the Bellman optimality equation for the action-value function:
+\begin{equation}
+    q_*(s,a) = \mathbb{E}\left[ R_{t+1} + \gamma \max_{a'} q_*(S_{t+1},a') \mid S_t = s, A_t = a \right].
+\end{equation}
+Q-learning approximates this relationship using sampled experience. At each time step, the action-value function is updated according to:
+\begin{equation}
+    Q(S_t, A_t) \leftarrow Q(S_t, A_t) + \alpha \left[ R_{t+1} + \gamma \max_{a'} Q(S_{t+1}, a) - Q(S_t, A_t) \right],
+\end{equation}
+where \( \alpha \in (0,1] \) is the learning rate (\cite{sutton2018reinforcement}, eq.6.6, p.~157).
+\\\\
+The term
+\begin{equation}
+    R_{t+1} + \gamma \max_{a'} Q(S_{t+1}, a')
+\end{equation}
+is referred to as the target, and represents a one-step approximation of the optimal return. The difference between this target and the current estimate defines the temporal difference error explained in the previous Section.
+\\\\
+The Q-learning algorithm uses a \textit{Q-table} to store and update the Q-values for the state-action pairs.
+\footnote{Just a link for later reference \url{chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.gatsby.ucl.ac.uk/~dayan/papers/cjch.pdf}}
+\todo[]{Should refer to Watkins work here}
+For tabular Q-learning the Q-values for the state-action pairs are stored in a Q-table. This allows the agent to learn from experience. However, when we have continuous or large state-action-space this method becomes impractical.
+\\\\
 from 1-step TD control the primary adjustment is to the target. 
 1 step TD: $$r_{t+1}^m + \gamma Q(s_{t+1}^m, a_{t+1}^m)$$
 
 $$r_{t+1}^m + \gamma Max_a Q(s_{t+1}^m, a)$$
-The max operator means that this is off-policy. 
-
-
-
-
-\subsubsection{Function Approximation}
-In many reinforcement learning problems, the state or action spaces are too large to allow for an exact tabular representation of value functions. In such cases, function approximation is used to generalize value estimates across states or state–action pairs. Instead of storing separate estimates for each state, a parameterized function is employed to represent the value function. Formally, the value function is approximated as $\hat{v}=(s,w)$ or $\hat{q}=(s,a,w)$, where w denotes a vector of adjustable parameters. These parameters are updated using data obtained through interaction with the environment, enabling the agent to improve its estimates even for previously unvisited states. Function approximation can be implemented using for example neural networks (\cite{sutton2018reinforcement}, p.197). 
-
-\subsubsection{Policy Gradient Methods}
-"Directly using arg max() to determine a policy is suitable when the action space is discrete and not too large. However, when the action space is continuous, this method becomes impractical as it involves a global maximization at every step. An alternative approach, known as policy gradients, learns the optimal policy directly. The basic idea is to represent the policy by a parametric function $\pi(St; \theta)$, where $\theta$ is the parameter vector. Learning is then done through exploring the environment and adjusting the policy parameters in the direction of greater action values. " (\cite{cao2020deephedging}, page 6)
-
-
-\subsection{Actor Critic}
-Actor-critic combines both Policy-based methods(Learning straight from a policy) and Value-based methods(Leaning a value function). \\
+the max operator indicates that this is off-policy. 
 \\
-Actor-critic is a Temporal difference version of policy gradients. It is two networks, the actor and the critic, where the actor takes the decisions and the critic validates them.
-The actor represents the policy and decides what action to take, i.e $\pi_\theta(a|s)$, and is updated to make better decisions. The critic on the other hand is validating how well the actor performed by either using the value function, $V^\pi(s)$ or the action-value function $Q^\pi(s,a)$ and it is calculating the TD-error. 
+A key feature of Q-learning is that it is an off-policy method. This means that the agent can learn the optimal policy independently of the policy used to generate data. In practice, this is often implemented using an exploratory behavior policy, such as an \(\epsilon\)-greedy strategy, while still updating towards the optimal policy.
+\\\\
+Compared to previous methods, Q-learning combines the advantages of Temporal Difference learning with the Bellman optimality principle, allowing it to learn optimal behavior directly from experience. This makes it a fundamental algorithm in reinforcement learning and forms the basis for many reinforcement learning agents. 
+\\\\
+However, the Q-tables become too large when we work with real-life data. This leads us to the Method, where Deep Reinforcement learning is introduced.
 
+\newpage
+\section{Method}\label{sec: Method}
+This Section presents the methodology used in this study. It describes how the environment and the agent are implemented, as well as how the training and evaluation procedures are conducted. The overall objective is to learn an optimal hedging strategy for a European call option. The set-up for the implementation has been made following the example of \cite{MathWorksHedgingRL}, "Hedge Options Using Reinforcement Learning Toolbox".
 
-\begin{equation}
-    \delta_t = R_{t+1} + \gamma V(s') -V(s)
-\end{equation}
-(p.121, eq 6.5, \cite{sutton2018reinforcement}). The TD error is updating the actor in the direction that will maximize the reward, weighted by $\delta$.
+\subsection{Environment}\label{sec: Enviroment}
+The first step in the implementation is to define the environment in which the agent operates. After this we explain how the environment evolves from the current state to the next. 
 
- 
-\subsection{Target Networks}
-A copy of the neural network that is used in the learning phase to improve stability (critic?) 
-
-
-\subsection{Neural Networks}\label{sec:Neural networks}
-Used in the acting space, takes in an observation and outputs a reward(?).\\
-\\
-Neural networks have the form 
-
-\begin{equation}
-    f(X) = \beta_0 + \sum_{k=1}^K \beta_k h_k(X) = 
-    f(X) = \beta_0 + \sum_{k=1}^K \beta_k g(w_{k0} + \sum_{j=1}^p w_{kj}X_j) 
-\end{equation}
-(eq.10.1, p.400, \cite{An_introduction_to_statitical_learning2023})
-
-the $K$ activations, $A_k$, $k= 1, \dots. K$ in the hidden layer are computed as functions of the features $X_1, \dots, X_p$ 
-
-\begin{equation}
-    A_k = h_k(X) = g(w_{k0} + \sum_{j=1}^p w_{kj} X_j)
-\end{equation}
-(eq.10.2, p.400, \cite{An_introduction_to_statitical_learning2023})
-where $g(z)$ is a non-linear activation function specified in advance. 
-
-\subsubsection{Activation function}
-\textbf{Sigmoid:} early instances of NN then this var favored, with probabilities between zero and one. 
-\begin{equation}
-    g(z) = \frac{e^z}{1 + e^z} = \frac{1}{1 + e^{-z}}
-\end{equation}
-(eq.10.4, p.401, \cite{An_introduction_to_statitical_learning2023})
-
-\textbf{ReLU:}
-
-
-\subsection{Replay Buffer}
-A list of all the data that the agent has seen and done so far, the experience replay buffer 
-
-\subsection{Ensemble learning}
-The main idea behind ensemble learning is that a prediction is better when you aggregate the predictions of a group rather than letting the best individual predictor determine the action. The group prediction is termed an ensemble (\cite{Hands_on_machine_learning_with_Scikit-Learn}, p.189). The benefit of using ensemble learning is more robust result. To demonstrate the One often speak off the bias-variance trade off 
-
-
-
-\subsection{Deep Q-Networks (DQN)}
-Deep Q-Networks combine classic Q-learning \ref{sec:Q-learning} with neural networks \ref{sec:Neural networks} to approximate the value function. An MDP where an agent is interacting over discrete time steps. and by every state, the agent 
+\subsubsection{Environment Definition}
+As illustrated in Figure \ref{fig:2.1Reinforcement learning}, the input to the environment is an action $A_t$, while the output is a state $S_{t+1}$ and a reward $R_{t+1}$. These components are defined as follows:
 \begin{itemize}
-    \item DQN is off policy, following ex epsilon greedy 
-    \item using replay buffer
-    \item  don't use actor-critic, but a neural network
-    \item have a target network to stabilize the learning
-    \item use discrete time steps. 
+    \item \textbf{Action}: The action represents the hedging decision and corresponds to a continuous value between 0 and 1, indicating the proportion of the underlying asset held.
+    \item \textbf{State}: The state consists of three variables observed by the agent: moneyness (defined as the ratio of the spot price to the strike price), time to maturity, and the current position in the underlying asset.
+    \item \textbf{Reward}: The reward is defined using an accounting profit and loss (P\&L) formulation. At each time step, it is given by the change in portfolio value, adjusted for gains from the hedging position and transaction costs (\cite{cao2020deephedging}, p.11): 
+    \begin{equation}
+        R_{i+1} = V_{i+1} - V_i + H_i (S_{i+1} - S_i) - \kappa \lvert S_i (H_{i+1} - H_i) \rvert,
+    \qquad 0 \le i < n,
+    \end{equation}
+    where \(S_i\) denotes the asset price at the beginning of period \(i\), and \(H_i\) represents the position held in the underlying asset over the interval \([i\Delta t, (i+1)\Delta t]\). The parameter \(\kappa\) captures proportional transaction costs, while \(V_i\) is the value of the derivative position at time \(i\). In addition to the stepwise rewards, transaction costs are also incurred when initiating and closing the hedge. The initial cost of establishing the position is given by $-\kappa \lvert S_0 H_0 \rvert$, and a corresponding cost is applied when the position is liquidated at the final time step: $-\kappa \lvert S_n H_n \rvert$ (\cite{cao2020deephedging}, p.11-12).
 \end{itemize}
 
-\subsection{DDGP}
-The reinforcement learning agent is trained using the DDPG algorithm, which combines temporal difference learning and policy gradients. The critic network estimates the Q-function using TD targets, while the actor network is updated through deterministic policy gradients (\cite{cao2020deephedging}, p.10-11). 
-
-\subsection{Twin Delayed Deep Deterministic Policy Gradient (TD3)}
-The twin delayed deep deterministic policy gradient (TD3) also uses an actor critic approach, as the DDGP agent, but this algorithm includes some adjustments. The aim of TD3 is to fix some of the issues in the deep deterministic policy gradient. This algorithm handles these issues with 3 main adjustments: clipped double Q-learning, target policy smoothing, and delayed policy updates. Clipped double learning means that two critics are used to estimate the q-function. The agent will use the lowest of the two q-values, which will help with overestimation. Target smoothing also aims to reduce overestimation, which is done by adding random noise to the target action when updating the policy. Delayed policy updates are used to address instability and this is done by updating the policy network less frequently than value networks \footnote{https://medium.com/@joanna.z.gryczka/td3-tutorial-and-implementation-682f16b56699}.
-
-
-
-\subsection{Ornstein-Uhlebeck noise}
-With ornstrin uhlebeck the ddpg agent  became much better :)
-
-
-
-\section{Application for Reinforcement Learning in Hedging}
-This section connects reinforcement learning to it's application in hedging. 
+\subsubsection{Environment Evolution}
+Now that all variables have been defined, the next step is to describe how the environment evolves at each time step. Given the current state $S_t$ and an action $A_t$, the environment transitions to a new state $S_{t+1}$ and produces a reward $R_{t+1}$.
 \\\\
-As introduced in Section \ref{sec:Reinforcement learning}, reinforcement learning involves an agent interacting with an environment in a sequential decision-making setting. At each time step, the agent observes the current state, selects an action, transitions to a new state, and receives a reward that reflects the quality of the chosen action.
-\\\\
-In our setting, the state is characterized by three variables: moneyness (defined as the spot price divided by the strike price), time to maturity, and the current position, i.e., the amount of the underlying asset held. The action corresponds to the hedge ratio, which takes a continuous value between 0 and 1. The reward is defined in terms of the portfolio’s profit and loss, which will be described in detail in the following section. 
-
-\subsection{Accounting Profit and Loss Formulation}
-Rewards when using accounting profit and loss, is given by the following equation (\cite{cao2020deephedging}, p.11)
-
+The underlying asset price follows a stochastic process modeled as Geometric Brownian Motion (\cite{cao2020deephedging}, p.14):
 \begin{equation}
-    R_{i+1} = V_{i+1} - V_i + H_i (S_{i+1} - S_i) - \kappa \lvert S_i (H_{i+1} - H_i) \rvert,
-\qquad 0 \le i < n,
+    dS = \mu S \, dt + \sigma S \, dz.
 \end{equation}
-"where \(S_i\) is the asset price at the beginning of period \(i\), \(H_i\) is the holding between 
-time \(i\Delta t\) and \((i+1)\Delta t\), \(\kappa\) is the trading cost as a proportion of the value of 
-what is bought or sold, and \(V_i\) is the value of the derivative position at the beginning of 
-period \(i\). (\(V_i\) is negative in the case of a short call option position). In addition, there is an initial reward associated with setting up the hedge equal to
+In discrete time, this implies that the next asset price is generated using the current price, drift, volatility, and a Gaussian noise term. Simultaneously, the time to maturity decreases by a fixed increment $\Delta t$, and the episode terminates when the maturity approaches zero.
+\\\\
+The reward is computed based on the accounting profit and loss formulation described in the previous Section. The change in the value of the derivative is calculated using the Black-Scholes formula. To account for risk preferences, a quadratic penalty term is applied to the profit and loss, resulting in the final reward: $R_t = \mathrm{P\&L} - c \cdot (\mathrm{P\&L})^2$, where $c$ is a risk-aversion parameter that penalizes large fluctuations in returns (\cite{MathWorksHedgingRL}).
+\\\\
+Finally, the environment updates its internal state by setting the new asset price, time to maturity, and position equal to the chosen action. The updated state, the computed reward, and a termination signal are then returned to the agent.
+
+\subsection{Agents}\label{sec:Agents}
+After the environment is defined, we now turn to the decision-making component of the system, the agent. In the context of option hedging, the agent functions as a portfolio manager. Its objective is to make sequential decisions regarding the underlying asset to minimize risk. To address the complexities of non-perfect markets, we explore three different agents, which have been implemented using deep reinforcement learning. In the Section \ref{sec: theory}, the fundamentals to reinforcement was introduced, but as we have extended our work to deep reinforcement learning, some new concepts will be discussed. 
+
+\subsubsection*{Shared Structure among the Agents}
+All three agents share several key characteristics. The agents we have used are designed to handle high-dimensional state spaces through function approximation, which means a parameterized function is employed to represent the value function:
+\begin{equation}
+     \quad q_\pi(s,a) \approx q(s,a; \theta),
+\end{equation}
+where \( \theta \) denotes a set of parameters.
+\\\\
+The parameters are updated by minimizing the difference between predicted values and target values derived from the Bellman equation. This can be formulated as minimizing the squared temporal difference error:
+\begin{equation}
+\label{eq: Squared temporal difference error}
+    \mathcal{L}(\theta) = \mathbb{E} \left[ \left( \underbrace{q(S_t, A_t; \theta)}_{\text{Predicted value}} - \underbrace{(R_{t+1} + \gamma \max_{a'} q(S_{t+1}, a'; \theta))}_{\text{Target value}} \right)^2 \right].
+\end{equation}
+The function approximator we have used is a neural network, which is what gives rise to deep reinforcement learning. Neural networks are capable of approximating complex, high-dimensional functions, making them suitable for problems where traditional tabular methods fail.
+\\\\
+Another shared feature among our three agents is that they are off-policy, meaning that the agent learns one policy, referred to as the target policy, while following a different policy, known as the behavior policy, to generate data. This separation makes the methods more powerful and general, as it offers a flexibility when dealing with the trade-off between exploration and exploitation. The downside when using off-policy methods are that they are often of greater variance and are slower to converge (\cite{sutton2018reinforcement}, p. 103, p.284). 
+\\\\\
+The agents also relays on temporal difference learning, meaning they build on bootstrapping. When combining function approximation, off-policy learning and bootstrapping, reinforcement learning algorithms may suffer from instability and even divergence. \cite{sutton2018reinforcement}, refer to this issue as the deadly triad. To mitigate the instability caused by the deadly triad, it is possible to employ techniques such as replay buffers and target networks.
+\\\\
+A replay buffer is a technique in which the agent’s experiences, consisting of state, action, reward, and next state tuples, are stored at each time step in a memory buffer. These stored transitions are later sampled to perform updates to the network parameters (\cite{MnihVolodymyr2013PAwD}, p.4). This approach improves data efficiency by allowing the agent to reuse past experiences multiple times. In addition, random sampling from the buffer breaks the correlations between the samples, which reduces the variance of the updates (\cite{MnihVolodymyr2013PAwD}, p.4-5).
+\\\\
+Target networks are used to further improve stability. Instead of using the same neural network to compute both the predicted value and the target value, in Equation \ref{eq: Squared temporal difference error}, a separate network, referred to as the target network, is maintained as a delayed copy of the main network  (\cite{DDPG}, p.4).
+\\\\
+An overview of the shared characteristics has now been given, but in the following three subsections a more detailed description of the three agents, called deep Q-network, deep deterministic policy gradient and twin delayed deep deterministic policy gradient, will be given. The difference between the three agents lies mainly in their way of handling action space and how they address stability and bias.  
+
+\subsubsection{Deep Q-Network (DQN)}
+The Deep Q-Network (DQN) algorithm is used for discrete action space and for us the actions are in the range $\in [0, 0.1, \dots, 0.9, 1]$. Deep Q-Networks combine classic Q-learning \ref{sec:Q-learning} with neural networks to approximate the Q-function. The Q-function as we have mentioned earlier is denoted as $Q(S_t, A_t, \theta)$ where $\theta$ is the neural network parameters. This allows the agent to learn in an efficient way when we have continuous or large state space. DQN therefore works in complex environment, where the tabular methods fails. 
+\\\\
+The goal when training the DQN is to minimize the error between the estimated $Q(S_t, A_t, \theta)$ and the true Q-function $Q(S_t, A_t)$. Since the true Q-function is unknown, we instead adjust the network parameters to minimize the error between the current estimate and a target value. This target represents what the Q-value would be by using Q-learning. The target is hence given by \footnote{See \url{https://www.sciencedirect.com/topics/computer-science/deep-q-network}. Last accessed 01.04.26.}:
+\begin{equation}
+    y = r + \gamma \max_{a'} Q(s', a'; \theta_{targ}),
+\end{equation}
+where $\theta_{targ}$ is the parameters of the target network. To train the network, we minimize a loss function defined as the mean squared error between the predicted Q-value and the target value, as shown in Equation \ref{eq: Squared temporal difference error}. Importantly, the target network parameters are used in the computation of the target to improve training stability. The loss is minimized using the Adam optimizer, a gradient-based optimization method. Gradients of the loss with respect to the network parameters are computed via backpropagation and used to iteratively update the model weights.
+\\\\
+The DQN algorithm is an off-policy method, which allows it to balance exploration and exploitation during training. In this setting, exploration is handled using an epsilon greedy policy, denoted as $\pi_\epsilon$. This means that the agent follows a greedy policy with a probability of $1-\epsilon$ and a random policy with probability  $\epsilon$ (\cite{cao2020deephedging}, p.9): 
 \[
--\kappa \lvert S_0 H_0 \rvert
+\pi_{\epsilon}(S_t) =
+\begin{cases}
+\arg\max_{a \in A} Q(S_t, a), & \text{with probability } 1 - \epsilon, \\
+\text{random } a \in A, & \text{with probability } \epsilon.
+\end{cases}
 \]
-and a final reward associated with liquidating the hedge at the end equal to
-\[
--\kappa \lvert S_n H_n \rvert .
-\]"
+In the beginning of the training our $\epsilon$ is set to 1, meaning the agent is very exploratory. As the training continuous the epsilon is decreased, leading the agent to rely more on the learned policy. In the end of the learning procedure the greedy policy is always followed, and at last we get our optimal policy. 
 
-\subsection{Geometric Brownian Motion}
-The underlying asset is simulated using a stochastic process called Geometric Brownian Motion.
-\[
-dS = \mu S\, dt + \sigma S\, dz
-\]
+\subsubsection{Deep Deterministic Policy Gradient (DDPG)}
+The deep deterministic policy gradient (DDPG) algorithm can be used for continuous action space, unlike the DQN algorithm. The structure for the DDPG algorithm is seen in Figure \ref{fig:ActorCritic}, where it builds on an actor–critic architecture and Q-learning (\cite{DDPG}, p.2).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Methodology and results
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-
-
-
-\section{Methodology and Results}\label{sec:Results}
-
-\subsection{Deep Deterministic Policy Gradient (DDPG)}\label{sec:Method DDPG}
-
-\subsection{TD3}\label{sec:Method TD3}
-
-\subsection{Deep Q-Network (DQN)}\label{sec:Method DQN}
-It may or may not make sense to split this section into two. The most important thing is that your thesis has 
-\enquote{a clear red thread with no loose ends}. This means that you should only include what is necessary for the outcome of your thesis and the structure should be such that everything leads to your results. If you need some results, which are not really fitting into the main body of your thesis but you need them to explain certain aspects, then place them in the appendix. A good example for this could be a mathematical theorem you need to apply somewhere, which is not fitting into your theory section.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Conclusion
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Conclusion}\label{sec:Conclusion}
-%% Summary
-\todo{summary}
-%% Conclusion
-\todo{conclusion/ answer research questions}
-%% Limitations and future research
-\todo{Limitations and future research}
-
-When you submit your thesis, please include the linenumbers by using the package \\\verb+\usepackage[pagewise]{lineno}+ and 
-activate it with the \verb+\linenumbers+ command. This makes the review process easier.
-
-For the final version you will upload to the file server, please remove the linenumbers by commenting out the 
-\verb+\linenumbers+ command.
-
-Please have a look at the guide for receiving a review and how to respond to it next.
-
-\begin{table}[]
+\begin{figure} [h!]
     \centering
-    \begin{tabular}{l|l|l|l|l}
-                                          &    BSM    &   DDPG     &   DQN      &  TD3 \\
-                                          \hline
-Average Hedge Cost (\% of Option Price)  & 90.447659 & 53.478604 & 35.375203 & 51.579402 \\
-STD Hedge Cost (\% of Option Price)      &35.595953 & 37.884597 & 55.680849 & 35.320559
-    \end{tabular}
+    \includegraphics[width=0.8\linewidth]{ActorCritic.png}
+    \caption{DDPG algorithm structure (\cite{DDPG}, p.3)}
+    \label{fig:ActorCritic}
+\end{figure}
+The actor and critic are two neural networks, with the following tasks: 
+\begin{itemize}
+    \item The actor, represents the policy and determines which action to take given a state.
+    \item The critic, estimates the Q-value function and evaluates how good a chosen action is.
+\end{itemize}
+This structure enables DDPG to combine policy learning with value estimation. In the next two parts, the critic and then actor network are explained in more detail. 
+
+\subsubsection*{Critic Network}
+The critic network takes in the current state and action as input and then outputs the corresponding Q-value (\cite{DDPG}, p.4). In this thesis the neural network for the critic was built using three fully connected layers and Rectified Linear Unit (ReLu) as activation functions. 
+\\\\
+The critic network is updated by minimizing the difference between the current predicted Q-value from the critic and a target value, which is constructed using the Bellman equation. The loss function that we want to minimize is hence given by (\cite{DDPG}, p.4, eq.7):
+\begin{equation}
+    \label{eq: critic loss function}
+    L(\phi, \mathcal{D}) = \mathbb{E}_{(s,a,r,s', d) \sim \mathcal{D}} \left[ \left(  \underbrace{Q_\phi(s, a)}_{\text{Current Q-value}} -  \underbrace{(r + \gamma (1-d) Q_{\phi_{targ}}(s', \mu_{\theta_{targ}} (s')))}_{\text{Target value}} \right)^2 \right].
+\end{equation}
+where $Q_{\phi}$ denotes the critic neural network with parameters $\phi$. The parameters $\phi_{\text{targ}}$ correspond to a separate target network, which is updated according to (\cite{DDPG}, p.4, eq.6):
+\begin{equation}
+    \phi_{targ} = p\phi_{targ} + (1-p)\phi
+    \label{eq: target networks}
+\end{equation}
+where $p \in[0,1]$ is a hyperparameter, often referred to as the Polyak coefficient. The target network is updated using soft updates, meaning that its parameters are slowly adjusted towards the parameters of the main network at each iteration. The term $d$ in the loss function indicates whether the next state is terminal, 1 if episode is done otherwise 0. The term $\mu_{\theta_{\text{targ}}}$ represents the target policy and $\mathcal{D} = (s,a,r,s', d)$ is a sampled set of transitions from the replay buffer. Equation \ref{eq: critic loss function} is minimized using the Adam optimizer, a gradient based optimization method.   
+
+\subsubsection*{Actor Network}
+The actor network takes in the current state and outputs an action. The neural network for the actor was built using three fully connected layers. ReLU activation functions are used in the hidden layers, while a sigmoid activation function is applied in the output layer to ensure that the action remains within the desired range 0 to 1.
+\\\\
+The actor is updated using policy gradients, which optimize the parameters of a policy by following the gradient in the direction of higher expected rewards. More specifically, it is trained to maximize the expected Q-value predicted by the critic (\cite{DDPG}, p.4, eq.8):
+\begin{equation}
+    \max_{\theta} \mathbb{E}{s \sim \mathcal{D}} \left[ Q{\phi}\big(s, \mu_{\theta}(s)\big) \right].
+    \label{eq: critic ddpg}
+\end{equation}
+This means that for each state, the actor selects an action according to its policy, which is then evaluated by the critic. The actor’s parameters are updated to increase the expected Q-value, meaning it learns to choose actions that the critic predicts will lead higher long-term rewards. In practice, this optimization is implemented using gradient ascent. Since standard optimizers perform gradient descent, the objective was rewritten as the minimization of the negative Q-value. *Policy gradient methods learns the optimal policy directly. The agent improves its behavior by interacting with the environment and updating these parameters in the direction of higher action values (\cite{cao2020deephedging}, p.6). 
+\\\\
+Through the interaction between the two networks, the critic provides feedback that guides the actor toward improved decisions over time. The actor and critic are trained iteratively until convergence (\cite{cao2020deephedging}, p.11).
+
+\subsubsection*{Exploration vs Exploitation}
+The policy in DDPG is deterministic, meaning that a specific action is selected for each given state. While this allows for stable policy learning, it also limits exploration, as the agent will repeatedly choose the same action for the same state. To address this, noise is added to the action during training which encourage exploration. Several noise processes can be used for this purpose, and in this thesis, the Ornstein-Uhlenbeck (OU) process is applied (\cite{DeepRLHandsOn}, p.412).
+\\\\
+The OU process is stochastic and in a discrete-time setting, the process can be described as:
+\begin{equation}
+    x_{t+1} = x_t + \theta (\mu - x_t) + \sigma N,
+\end{equation}
+where $\theta$ determines the rate of mean reversion, $\mu$ is the long-term mean, $\sigma$ controls the magnitude of the noise, and N is normal noise. In this process the generated noise depends on its previous value, which creates a smoother and more consistent exploration pattern compared to independent random noise (\cite{DeepRLHandsOn}, p.412).
+\\\\
+All components of the DDPG algorithm have now been introduced. An overview of how these components interact during training is illustrated in Figure \ref{fig:DDPG all parts}.
+
+\begin{figure} [h!]
+    \centering
+    \includegraphics[width=0.8\linewidth]{DDPG All parts.png}
+    \caption{The learning policies of the DDPG algorithm (\cite{DDPG}, p.3)}
+    \label{fig:DDPG all parts}
+\end{figure}
+\noindent The DDPG algorithm is a powerful tool as it can handle high-dimensional states and action spaces, but it has some issues such as overestimation bias and overly sensitive parameters (\cite{DDPG}, p.2). In the next Section a modified version of the DDPG is therefore examined. 
+
+\subsubsection{Twin Delayed Deep Deterministic Policy Gradient (TD3)}
+The Twin Delayed Deep Deterministic Policy Gradient (TD3) algorithm builds upon the actor–critic framework used in DDPG but introduces several modifications to address known issues such as overestimation bias and training instability. In particular, TD3 incorporates three key improvements: clipped double Q-learning, target policy smoothing, and delayed policy updates \footnote{See: \url{https://medium.com/@joanna.z.gryczka/td3-tutorial-and-implementation-682f16b56699}. Last accessed 16.03.26.}. The information about the TD3 algorithm is based on \cite{fujimoto2018td3} and OpenAI Spinning Up documentation about Twin Delayed DDPG \footnote{See:\url{https://spinningup.openai.com/en/latest/algorithms/td3.html#references}. Last accessed 19.03.26}.
+
+\subsubsection*{Clipped double Q-learning}
+Clipped double Q-learning in TD3 involves learning two separate Q-functions, denoted  $Q_{\phi_1}$ and $Q_{\phi_2}$. Instead of relying on a single estimate, the minimum of the two Q-values is used when constructing the target in the loss function. The target value from Equation \ref{eq: critic loss function} is hence changed to:
+\begin{equation}
+\label{eq: target value in TD3}
+    y(r,s',d) = r + \gamma (1 - d) \min_{i=1,2} Q_{\phi_i,\text{targ}}\big(s', a'(s')\big).
+\end{equation}
+By using the smaller of the two estimates, the method produces more conservative targets, which helps against overestimation. Each Q-function is then trained independently by minimizing the mean squared error with respect to this shared target:
+\begin{equation}
+    L(\phi_1, \mathcal{D}) = \mathbb{E} \left[ \left( Q_{\phi_1}(s,a) - y(r,s',d) \right)^2 \right],
+\end{equation}
+\begin{equation}
+    L(\phi_2, \mathcal{D}) = \mathbb{E} \left[ \left( Q_{\phi_2}(s,a) - y(r,s',d) \right)^2 \right].
+\end{equation}
+The policy is updated by maximizing the Q-value estimated by one of the critics, where we have used $Q_{\phi_1}$:
+\begin{equation}
+    \max_{\theta} \mathbb{E_{\text{s} \sim \mathcal{D}}} \left[ Q_{\phi_1}\big(s, \mu_{\theta}(s)\big) \right].
+    \label{eq: critic ddpg}
+\end{equation}
+
+\subsubsection*{Target Policy Smoothing}
+In addition to clipped double Q-learning, TD3 applies target policy smoothing by adding small noise to the target action, denoted as $a'(s')$, when computing the target value, see Equation \ref{eq: target value in TD3}. This noise is distinct from the exploration noise used in DDPG, which is added to the actor’s output during training, where we have used the OU process noise. In TD3, both types of noise are used, as they serve different purposes.
+\\\\
+The target policy smoothing noise is introduced to prevent the policy from exploiting sharp errors in the critic and encourages smoother value estimates. After adding the noise, the resulting action is clipped to ensure it remains within the valid action range, [0,1]. The target action is defined as:
+\begin{equation}
+    a'(s') = \text{clip}\left(\mu_{\theta_{\text{targ}}}(s') + \text{clip}(\epsilon,-c,c), a_{Low}, a_{High}\right), \;\;\;\;\; \epsilon \sim \mathcal{N}(0, \sigma)
+\end{equation}
+where the parameter c controls the maximum magnitude of the smoothing noise. 
+
+\subsubsection*{Delayed Policy Updates}
+The third improvement in TD3 is the use of delayed policy updates. In the DDPG algorithm, the actor and critic networks are updated at the same frequency. In contrast, TD3 updates the actor network less frequently than the critic networks. This allows the value estimates to stabilize before being used to update the policy, reducing variance in the learning process.
+
+\subsection{Evaluation}
+To evaluate the performance of the reinforcement learning agents, they are compared against the classical Black–Scholes delta-hedging strategy. A new set of simulated price paths is generated, which is not used during training. This ensures that the evaluation is conducted on unseen data, allowing us to assess the generalization ability of the learned policy rather than its ability to fit the training scenarios.
+\\\\
+Then four hedging strategies are considered. The first is the theoretical Black–Scholes delta, which serves as a benchmark. The other policies are learned by the different reinforcement learning agents: DQN, DDPG, and TD3. For each strategy, hedging is performed along the simulated price paths.
+\\\\
+Finally, the hedging costs are computed across a large number of simulated trials. These costs capture the total expense of maintaining the hedge in the presence of transaction costs and provide a basis for comparing the efficiency of the different approaches.
+
+\subsection{Multi-Agent Reinforcement Learning}
+\todo[]{Dont bother about reading this Kevin, its not written up yet}
+\epigraph{\enquote{If multi
+agent learning is the answer, what is the question?}}{---\textit{Shoham, Powers, and Grenager (2007)}}
+Here we will write about the multi-agent, \cite{marl-book}.\\
+A multi-agent system consist of more than one decision making agent that all interact in the environment to achieve certain goals. \cite{marl-book}.
+Multi-agent Reinforcement learning (MARL), we will now find a joint-action. 
+MARL is like the real world, we have more than one agent in the real world, and they are all interacting with each other. A team of people that want to achive the same goal. 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Template/Figures/multiagent.png}
     \caption{Caption}
-    \label{tab:placeholder}
-\end{table}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsubsection{Decentralized}
+
+\subsubsection{Centralized/Shared}
+Non-stationary environment. 
+Separate replay buffers and a shared experience buffer? 
+
+
+\subsubsection{}
+
+
+\section{Results}
+\section{Discussion}
+DQN - Reduce the Bias\\
+Actor Critic - Reduce the variance by estimating bootstrapped returns 
+
+\section{Conclusion}
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Appendix
@@ -716,8 +963,49 @@ The authors have no relevant confidentiality agreements to disclose.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Declarations}
 The authors have no relevant financial or non-financial interests to disclose.
-
-
+\section*{Results}
+\begin{table}[]
+    \centering
+    \begin{tabular}{c|c|c|c|c|c}
+                                                 & BSM  &     DDPG   &     DQN   &     TD3   &  Hybrid\\
+                                                  \hline
+Average Hedge Cost (\% of Option Price)&  90.447659& 37.133604  &37.105700 & 34.505608 & 39.016182\\
+STD Hedge Cost (\% of Option Price)  &    35.595953 & 72.639554 & 59.946967 & 76.171148 & 61.222362
+    \end{tabular}
+    \caption{1000 runs 16 April}
+    \label{tab:placeholder}
+\end{table}
+\begin{table}[]
+    \centering
+    \begin{tabular}{c|c|c|c|c|c}
+                                                 & BSM  &     DDPG   &     DQN   &     TD3   &  Hybrid\\
+                                                  \hline
+Average Hedge Cost (\% of Option Price)  & 90.447659 & 53.604624 & 41.584911 & 45.865090 & 44.582307 \\
+STD Hedge Cost (\% of Option Price)      & 35.59595 & 43.586858 & 53.262526 & 45.846221  & 47.644548
+    \end{tabular}
+    \caption{2000 runs 16 April}
+    \label{tab:placeholder}
+\end{table}
 
 \end{document}
+# Apply budget constraint
+            if budget is not None:
+                trade_cost = np.abs(pos_next - pos_prev) * sim_paths[timeidx, :]
+                over = trade_cost > budget_remaining
+                if np.any(over):
+                    max_delta = np.where(
+                        sim_paths[timeidx, :] > 0,
+                        budget_remaining / sim_paths[timeidx, :],
+                        0.0
+                    )
+                    pos_next = np.where(
+                        over,
+                        np.where(pos_next > pos_prev,
+                                 pos_prev + max_delta,
+                                 pos_prev - max_delta),
+                        pos_next
+                    )
+                    pos_next = np.clip(pos_next, 0.0, 1.0)
+                budget_remaining -= np.abs(pos_next - pos_prev) * sim_paths[timeidx, :]
+                budget_remaining  = np.maximum(budget_remaining, 0.0)
 

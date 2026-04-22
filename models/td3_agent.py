@@ -43,6 +43,7 @@ class TD3Agent:
 
         self.opt_critic = optim.Adam(list(self.critic1.parameters()) + list(self.critic2.parameters()), lr = learnRate)
         self.noise = OUNoise(mu = np.zeros(act_dim))
+     
 
         self.buffer = ReplayBuffer()
     
@@ -78,6 +79,7 @@ class TD3Agent:
 
     def train(self, batch=64):
         self.total_it += 1
+        self.reset_noise()
 
         if len(self.buffer.buffer) < batch:
             return

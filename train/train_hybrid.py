@@ -38,8 +38,6 @@ def train_hybrid(episodes, env, agent, batch_size, score_window_length, stop_avg
             # Train both sub-agents
             agent.train(batch_size)
 
-
-
             state = next_state
             episode_reward += reward
 

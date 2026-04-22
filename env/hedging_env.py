@@ -49,17 +49,33 @@ class HedgingEnv:
         step_reward = 0
         reward = 0
 
+
         # Geometric Brownian Motion for price simulation
         spot_next = spot_prev * ((1 + self.mu * self.dT) + (np.random.randn() * self.vol) * np.sqrt(self.dT))
         ttm_next = max(0, self.maturity - self.dT)
 
         done = ttm_next < 1e-8
 
-        # Reward P&L
-        step_reward = ((spot_next - spot_prev) * action 
-                        - abs((action - pos_prev) * spot_next) * self.kappa
-                        - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
-                        + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
+        # For likvidering of large positions
+        trading_size = abs(action-pos_prev)
+        linear_cost = trading_size *spot_next * self.kappa
+
+        market_inpact = 0.001
+        impact_cost = market_inpact * (trading_size**2) * spot_next
+        total_transaction_cost = linear_cost + impact_cost
+
+        if market_inpact != 0:
+            # Reward P&L with likvidering 
+            step_reward = ((spot_next - spot_prev) * action 
+                            - total_transaction_cost
+                            - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
+                            + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))        
+        else:
+            # Reward P&L
+            step_reward = ((spot_next - spot_prev) * action 
+                            - abs((action - pos_prev) * spot_next) * self.kappa
+                            - bs_price(spot_next, self.strike, self.rate, ttm_next, self.vol) 
+                            + bs_price(spot_prev, self.strike, self.rate, ttm_prev, self.vol))
 
         if done: 
             step_reward -= action * spot_next * self.kappa
@@ -76,6 +92,10 @@ class HedgingEnv:
         self.spot = spot_next
 
         return reward, state_next, done
+    
+    def courtage():
+        1 * ()
+
     
     def reset(self):
         self.spot = self.start_spot

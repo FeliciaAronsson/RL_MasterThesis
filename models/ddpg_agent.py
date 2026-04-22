@@ -34,6 +34,7 @@ class DDPGAgent:
 
         self.buffer = ReplayBuffer()
         self.noise = OUNoise(mu = np.zeros(act_dim))
+        
 
     def __str__(self):
         return "DDPG"

@@ -276,7 +276,10 @@ def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
     pos     = {name: [] for name in ["DDPG", "DQN", "TD3", "Hybrid"]}
 
     while not done:
+        state = np.array(state)
         s = torch.tensor([state], dtype=torch.float32)
+        
+
         with torch.no_grad():
             ddpg_agent.actor.eval()
             td3_agent.actor.eval()
@@ -292,7 +295,21 @@ def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
             raw = hybrid_agent.td3.actor(s).item()
             lo  = actions_list[idx]
             hi  = actions_list[idx + 1] if idx + 1 < len(actions_list) else 1.0
-            a_hybrid = lo + raw * (hi - lo)
+            
+            # a_hybrid = lo + raw * (hi - lo)
+
+            # Rescale TD3 output to [lower_bound, upper_bound]
+            if raw < lo:
+                a_hybrid = lo - raw * (hi - lo)
+                a_hybrid = float(np.clip(a_hybrid, 0.0, 1.0))
+
+            elif raw == lo:
+                a_hybrid = lo 
+                a_hybrid = float(np.clip(a_hybrid, 0.0, 1.0))
+
+            else:
+                a_hybrid = lo + raw * (hi - lo)
+                a_hybrid = float(np.clip(a_hybrid, 0.0, 1.0))
 
         pos["DDPG"].append(a_ddpg)
         pos["DQN"].append(a_dqn)
@@ -300,10 +317,14 @@ def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
         pos["Hybrid"].append(a_hybrid)
 
         reward, next_state, done = env.step(a_td3)
+
+
         prices.append(env.spot)
         bsm_pos.append(
             bs_delta(env.spot, env.strike, env.rate, env.maturity, vol))
+        
         state = next_state
+   
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True,
                                    gridspec_kw={"height_ratios": [1, 2]})

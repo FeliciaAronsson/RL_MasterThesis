@@ -24,13 +24,16 @@ HIDDEN_DIM = 64
 BATCH_SIZE = 64
 
 # DQN action space 
-ACTIONS_LIST     = np.linspace(0, 1, 11)
+ACTIONS_LIST     = np.linspace(0, 1, 21)
 ACTION_DIMENSION = len(ACTIONS_LIST)
 
 # Training
-EPISODES            = 300
+EPISODES            = 500
 SCORE_WINDOW_LENGTH = 200
 STOP_AVG_REWARD     = 0
+
+# Constraints 
+BUDGET_CONSTRAINT = 1000
 
 # Output
 PLOT = True

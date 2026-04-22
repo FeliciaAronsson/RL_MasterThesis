@@ -22,25 +22,52 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
 
     pos_next = policy(sim_paths[0,:]/strike, maturity, pos_prev)
 
-    # Hedging loop 
-    for timeidx in range(1, n_steps + 1):
+    # For likvidering 
+    market_inpact =  0.001
+    if market_inpact != 0:
+           # For likvidering 
+           # Hedging loop 
+        for timeidx in range(1, n_steps + 1):
+            trade_size = np.abs(pos_next - pos_prev)
+            linear_cost = trade_size * sim_paths[timeidx - 1, :] * kappa
+            impact_cost = market_inpact * (trade_size**2) *  sim_paths[timeidx - 1, :]
 
-        T_prev = maturity - sim_times[timeidx - 1]
-        T_next = np.maximum(0, maturity - sim_times[timeidx])
+            T_prev = maturity - sim_times[timeidx - 1]
+            T_next = np.maximum(0, maturity - sim_times[timeidx])
 
-        rew[timeidx - 1, :] = ((sim_paths[timeidx, :] - sim_paths[timeidx - 1, :]) * pos_prev
-            - np.abs(pos_next - pos_prev) * sim_paths[timeidx - 1,:] * kappa
-            - bs_price(sim_paths[timeidx, :], strike, rate, T_next, exp_vol) 
-            + bs_price(sim_paths[timeidx - 1, :], strike, rate, T_prev, exp_vol))
-        
-        if timeidx == n_steps: 
-            # Final step (matuarity)
-            rew[timeidx - 1, :] -= pos_next * sim_paths[timeidx, :] * kappa
+            rew[timeidx - 1, :] = ((sim_paths[timeidx, :] - sim_paths[timeidx - 1, :]) * pos_prev
+                - (linear_cost + impact_cost)
+                - bs_price(sim_paths[timeidx, :], strike, rate, T_next, exp_vol) 
+                + bs_price(sim_paths[timeidx - 1, :], strike, rate, T_prev, exp_vol))
             
-        else:
-            pos_prev = pos_next
-            pos_next = policy(sim_paths[timeidx,:]/strike, T_next, pos_prev) 
+            if timeidx == n_steps: 
+                # Final step (matuarity)
+                rew[timeidx - 1, :] -= pos_next * sim_paths[timeidx, :] * kappa
+                
+            else:
+                pos_prev = pos_next
+                pos_next = policy(sim_paths[timeidx,:]/strike, T_next, pos_prev) 
+                
+    else:
+        # Hedging loop 
+        for timeidx in range(1, n_steps + 1):
+
+            T_prev = maturity - sim_times[timeidx - 1]
+            T_next = np.maximum(0, maturity - sim_times[timeidx])
+
+            rew[timeidx - 1, :] = ((sim_paths[timeidx, :] - sim_paths[timeidx - 1, :]) * pos_prev
+                - np.abs(pos_next - pos_prev) * sim_paths[timeidx - 1,:] * kappa
+                - bs_price(sim_paths[timeidx, :], strike, rate, T_next, exp_vol) 
+                + bs_price(sim_paths[timeidx - 1, :], strike, rate, T_prev, exp_vol))
             
+            if timeidx == n_steps: 
+                # Final step (matuarity)
+                rew[timeidx - 1, :] -= pos_next * sim_paths[timeidx, :] * kappa
+                
+            else:
+                pos_prev = pos_next
+                pos_next = policy(sim_paths[timeidx,:]/strike, T_next, pos_prev) 
+                
     perCost = np.sum(rew, axis = 0)
 
     return perCost
