@@ -28,7 +28,7 @@ ACTIONS_LIST     = np.linspace(0, 1, 21)
 ACTION_DIMENSION = len(ACTIONS_LIST)
 
 # Training
-EPISODES            = 500
+EPISODES            = 10
 SCORE_WINDOW_LENGTH = 200
 STOP_AVG_REWARD     = 0
 
@@ -38,3 +38,6 @@ BUDGET_CONSTRAINT = 1000
 # Output
 PLOT = True
 REPORT = True
+
+# Liquidation of large positions
+MARKET_INPACT = 0.05 # If swe to zero, market inpact will be ignored

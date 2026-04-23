@@ -13,7 +13,7 @@ COLORS = {
 
 def build_report(
     Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice,
-    rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybrid,
+    rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybrid, heatmap_data,
     output_path="hedging_report.html"
 ):
     Cost_BSM    = np.array(Cost_BSM,    dtype=float)
@@ -298,7 +298,109 @@ def build_report(
   {fig_ind.to_html(full_html=False, include_plotlyjs=False)}
 </div>
 """)
+# ── 6. Hedge Trajectory (Dynamic) ────────────────────────────────────────
+    # ... (din befintliga kod) ...
 
+    if heatmap_data:
+        # Skapa subplots: Rad 1 för pris, Rad 2 för positioner
+        fig_traj = make_subplots(
+            rows=2, cols=1, 
+            shared_xaxes=True,
+            vertical_spacing=0.08,
+            row_heights=[0.0, 1.0],
+            subplot_titles=("Asset Price Path", "Agent Hedge Positions (Delta)")
+        )
+
+        # Rad 1: Asset Price
+        fig_traj.add_trace(go.Scatter(
+            x=heatmap_data["steps"], y=heatmap_data["prices"],
+            name="Asset Price", line=dict(color="black", width=2)
+        ), row=1, col=1)
+
+        # Rad 2: BSM Delta (dashed)
+        fig_traj.add_trace(go.Scatter(
+            x=heatmap_data["steps"], y=heatmap_data["BSM"],
+            name="BSM Delta", line=dict(color=COLORS["BSM"], width=2, dash='dash')
+        ), row=2, col=1)
+
+        # Rad 2: RL Agents
+        for name in ["DDPG", "DQN", "TD3", "Hybrid"]:
+            fig_traj.add_trace(go.Scatter(
+                x=heatmap_data["steps"], y=heatmap_data[name],
+                name=name, line=dict(color=COLORS[name], width=1.5),
+                opacity=0.8
+            ), row=2, col=1)
+
+        fig_traj.update_layout(
+            height=700,
+            plot_bgcolor="white",
+            hovermode="x unified",
+            legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center")
+        )
+        fig_traj.update_yaxes(showgrid=True, gridcolor="#eee")
+        fig_traj.update_xaxes(showgrid=True, gridcolor="#eee")
+
+        sections.append(f"""
+<div class="section">
+    <h2>6. Detailed Hedge Trajectory</h2>
+    <p class="desc">A step-by-step look at one simulated episode. 
+    The upper panel shows the price evolution, and the lower panel shows 
+    how each agent adjusted its hedge ratio in response.</p>
+    {fig_traj.to_html(full_html=False, include_plotlyjs=False)}
+</div>
+""")
+        
+        # ──7. Hedge Trajectory (Dynamic) ────────────────────────────────────────
+    # ... (din befintliga kod) ...
+
+    if heatmap_data:
+        # Skapa subplots: Rad 1 för pris, Rad 2 för positioner
+        fig_traj = make_subplots(
+            rows=2, cols=1, 
+            shared_xaxes=True,
+            vertical_spacing=0.08,
+            row_heights=[0.0, 1.0],
+            subplot_titles=("Asset Price Path", "Agent Hedge Positions (Delta)")
+        )
+
+        # Rad 1: Asset Price
+        fig_traj.add_trace(go.Scatter(
+            x=heatmap_data["steps"], y=heatmap_data["prices"],
+            name="Asset Price", line=dict(color="black", width=2)
+        ), row=1, col=1)
+
+        # Rad 2: BSM Delta (dashed)
+        fig_traj.add_trace(go.Scatter(
+            x=heatmap_data["steps"], y=heatmap_data["BSM"],
+            name="BSM Delta", line=dict(color=COLORS["BSM"], width=2, dash='dash')
+        ), row=2, col=1)
+
+        # Rad 2: RL Agents
+        for name in ["DDPG", "DQN", "TD3", "Hybrid"]:
+            fig_traj.add_trace(go.Scatter(
+                x=heatmap_data["steps"], y=heatmap_data[name],
+                name=name, line=dict(color=COLORS[name], width=1.5),
+                opacity=0.8
+            ), row=2, col=1)
+
+        fig_traj.update_layout(
+            height=700,
+            plot_bgcolor="white",
+            hovermode="x unified",
+            legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center")
+        )
+        fig_traj.update_yaxes(showgrid=True, gridcolor="#eee")
+        fig_traj.update_xaxes(showgrid=True, gridcolor="#eee")
+
+        sections.append(f"""
+<div class="section">
+    <h2>6. Detailed Hedge Trajectory</h2>
+    <p class="desc">A step-by-step look at one simulated episode. 
+    The upper panel shows the price evolution, and the lower panel shows 
+    how each agent adjusted its hedge ratio in response.</p>
+    {fig_traj.to_html(full_html=False, include_plotlyjs=False)}
+</div>
+""")
     # ── Footer ────────────────────────────────────────────────────────────────
     sections.append("""
 </div>

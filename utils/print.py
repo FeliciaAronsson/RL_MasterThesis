@@ -259,8 +259,7 @@ def plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
     plt.tight_layout()
     plt.savefig("plot_policy_heatmaps.png", dpi=150, bbox_inches="tight")
     plt.show()
-
-
+    
 def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
                           actions_list, vol):
     """
@@ -268,6 +267,8 @@ def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
     the BSM delta and the asset price.
     """
     np.random.seed(42)
+
+
     state = env.reset()
     done  = False
 
@@ -431,3 +432,52 @@ def _single_curve(rewards, name, window=100):
     plt.savefig(f"plot_learningcurve_{name.lower()}.png", dpi=150,
                 bbox_inches="tight")
     plt.show()
+
+
+def get_trajectory_data(env, dqn_agent, ddpg_agent, td3_agent, hybrid_agent, actions_list, vol):
+    np.random.seed(42) # Samma seed som i din plot
+    state = env.reset()
+    done = False
+
+    data = {
+        "steps": [0],
+        "prices": [env.spot], 
+        "BSM": [bs_delta(env.spot, env.strike, env.rate, env.maturity, vol)],
+        "DDPG": [], "DQN": [], "TD3": [], "Hybrid": []
+    }
+
+    while not done:
+        s = torch.tensor([state], dtype=torch.float32)
+        with torch.no_grad():
+            # Sätt i eval-läge
+            ddpg_agent.actor.eval(); td3_agent.actor.eval()
+            dqn_agent.qnet.eval(); hybrid_agent.dqn.qnet.eval()
+            hybrid_agent.td3.actor.eval()
+
+            # Beräkna alla actions
+            a_ddpg = ddpg_agent.actor(s).item()
+            a_td3  = td3_agent.actor(s).item()
+            a_dqn  = actions_list[dqn_agent.qnet(s).argmax(dim=1).item()]
+            
+            idx = hybrid_agent.dqn.qnet(s).argmax(dim=1).item()
+            raw = hybrid_agent.td3.actor(s).item()
+            lo, hi = actions_list[idx], (actions_list[idx+1] if idx+1 < len(actions_list) else 1.0)
+            a_h = lo + raw * (hi - lo)
+
+        # Spara positioner
+        data["DDPG"].append(a_ddpg); data["DQN"].append(a_dqn)
+        data["TD3"].append(a_td3); data["Hybrid"].append(a_h)
+
+        # Stega framåt (vi följer TD3:s bana som i ditt exempel)
+        _, next_state, done = env.step(a_td3)
+        
+        data["steps"].append(len(data["prices"]))
+        data["prices"].append(env.spot)
+        data["BSM"].append(bs_delta(env.spot, env.strike, env.rate, env.maturity, vol))
+        state = next_state
+    
+    # Justera längden på de sista positionerna för att matcha pris-listan
+    for name in ["DDPG", "DQN", "TD3", "Hybrid"]:
+        data[name].append(data[name][-1]) # Håll sista positionen vid förfall
+        
+    return data

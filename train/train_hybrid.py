@@ -33,7 +33,7 @@ def train_hybrid(episodes, env, agent, batch_size, score_window_length, stop_avg
             agent.td3.buffer.add(state, raw_td3, reward, next_state, done)
 
             # Experience Buffer
-            agent.experience_buffer.add(state, bin_idx, raw_td3, reward, next_state, done)
+            agent.experience_buffer.add(state, action, bin_idx, raw_td3, reward, next_state, done)
 
             # Train both sub-agents
             agent.train(batch_size)

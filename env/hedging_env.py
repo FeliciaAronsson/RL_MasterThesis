@@ -1,5 +1,6 @@
 import numpy as np
 from utils.bs import bs_price
+from config import MARKET_INPACT
 
 class HedgingEnv:
     def __init__(self, spot, strike, maturity, vol, mu, dT, kappa, c, init_position, r):
@@ -56,15 +57,13 @@ class HedgingEnv:
 
         done = ttm_next < 1e-8
 
-        # For likvidering of large positions
+        # Used for Liquidation of large positions
         trading_size = abs(action-pos_prev)
         linear_cost = trading_size *spot_next * self.kappa
-
-        market_inpact = 0.001
-        impact_cost = market_inpact * (trading_size**2) * spot_next
+        impact_cost = MARKET_INPACT * (trading_size**2) * spot_next
         total_transaction_cost = linear_cost + impact_cost
 
-        if market_inpact != 0:
+        if MARKET_INPACT != 0:
             # Reward P&L with likvidering 
             step_reward = ((spot_next - spot_prev) * action 
                             - total_transaction_cost
@@ -92,9 +91,6 @@ class HedgingEnv:
         self.spot = spot_next
 
         return reward, state_next, done
-    
-    def courtage():
-        1 * ()
 
     
     def reset(self):

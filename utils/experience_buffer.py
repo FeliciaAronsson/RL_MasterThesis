@@ -12,7 +12,7 @@ class ExperienceBuffer:
         self.experience_buffer = []
         self.size = size
 
-    def add(self, state, action_agent1, action_agent2, reward, next_state, done):
+    def add(self, state, total_action, action_agent1, action_agent2, reward, next_state, done):
         """
         Add the transition to the agents memory bank (the Replay Buffer)
         
@@ -26,7 +26,7 @@ class ExperienceBuffer:
     
         if len(self.experience_buffer) >= self.size:
             self.experience_buffer.pop(0)
-        self.experience_buffer.append((state, action_agent1, action_agent2, reward, next_state, done))
+        self.experience_buffer.append((state, total_action, action_agent1, action_agent2, reward, next_state, done))
 
 
     def sample(self, batch):

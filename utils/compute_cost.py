@@ -1,5 +1,6 @@
 import numpy as np
 from utils.bs import bs_price
+from config import MARKET_INPACT
 
 def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vol, init_pos, dT, mu, kappa):
 
@@ -23,14 +24,13 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
     pos_next = policy(sim_paths[0,:]/strike, maturity, pos_prev)
 
     # For likvidering 
-    market_inpact =  0.001
-    if market_inpact != 0:
+    if MARKET_INPACT != 0:
            # For likvidering 
            # Hedging loop 
         for timeidx in range(1, n_steps + 1):
             trade_size = np.abs(pos_next - pos_prev)
             linear_cost = trade_size * sim_paths[timeidx - 1, :] * kappa
-            impact_cost = market_inpact * (trade_size**2) *  sim_paths[timeidx - 1, :]
+            impact_cost = MARKET_INPACT * (trade_size**2) *  sim_paths[timeidx - 1, :]
 
             T_prev = maturity - sim_times[timeidx - 1]
             T_next = np.maximum(0, maturity - sim_times[timeidx])
