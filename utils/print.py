@@ -45,7 +45,7 @@ def print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, Opti
     print("="*65 + "\n")
 
 
-def plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice):
+def plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid):
     """
     Overlapping histogram of hedging cost distributions for all five strategies.
     Dashed vertical lines mark each distribution's mean.
@@ -61,7 +61,7 @@ def plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionP
         "Hybrid": Cost_hybrid,
     }
 
-    all_vals = np.concatenate([-c / OptionPrice * 100 for c in costs.values()])
+    all_vals = np.concatenate([-c * 100 for c in costs.values()])
     bins = np.linspace(
         np.percentile(all_vals, 1),
         np.percentile(all_vals, 99),
@@ -69,12 +69,12 @@ def plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionP
     )
 
     for name, cost in costs.items():
-        ax.hist(-cost / OptionPrice * 100, bins=bins,
+        ax.hist(-cost * 100, bins=bins,
                 alpha=0.45, color=COLORS[name], label=name, edgecolor="none")
-        ax.axvline(-np.mean(cost) / OptionPrice * 100,
+        ax.axvline(-np.mean(cost) * 100,
                    color=COLORS[name], linewidth=1.8, linestyle="--")
 
-    ax.set_xlabel("Hedging cost (% of option price)", fontsize=12)
+    ax.set_xlabel("Hedging cost", fontsize=12)
     ax.set_ylabel("Number of trials", fontsize=12)
     ax.set_title("Distribution of hedging costs across 1,000 simulated paths", fontsize=13)
     ax.legend(fontsize=10)
@@ -82,40 +82,6 @@ def plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionP
     plt.tight_layout()
     plt.savefig("plot_histogram.png", dpi=150, bbox_inches="tight")
     plt.show()
-
-
-def plot_cost_bars(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice):
-    """
-    Bar chart comparing mean hedging cost with +/- 1 std error bars.
-    """
-    agents = ["BSM", "DDPG", "DQN", "TD3", "Hybrid"]
-    costs  = [Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid]
-
-    means = [-np.mean(c) / OptionPrice * 100 for c in costs]
-    stds  = [ np.std(c)  / OptionPrice * 100 for c in costs]
-
-    fig, ax = plt.subplots(figsize=(9, 5))
-    bars = ax.bar(agents, means,
-                  color=[COLORS[a] for a in agents],
-                  alpha=0.8, edgecolor="white", linewidth=0.8, width=0.55)
-    ax.errorbar(agents, means, yerr=stds,
-                fmt="none", color="black",
-                capsize=5, linewidth=1.5, capthick=1.5)
-
-    for bar, mean, std in zip(bars, means, stds):
-        ax.text(bar.get_x() + bar.get_width() / 2,
-                mean + std + 0.3,
-                f"{mean:.1f}",
-                ha="center", va="bottom", fontsize=9)
-
-    ax.set_ylabel("Mean hedging cost (% of option price)", fontsize=12)
-    ax.set_title("Mean hedging cost +/- 1 standard deviation", fontsize=13)
-    ax.grid(True, alpha=0.25, axis="y")
-    ax.set_axisbelow(True)
-    plt.tight_layout()
-    plt.savefig("plot_cost_bars.png", dpi=150, bbox_inches="tight")
-    plt.show()
-
 
 def plot_learningcurve(rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybrid,
                        window=100):
@@ -292,12 +258,24 @@ def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
             raw = hybrid_agent.td3.actor(s).item()
             lo  = actions_list[idx]
             hi  = actions_list[idx + 1] if idx + 1 < len(actions_list) else 1.0
-            a_h = lo + raw * (hi - lo)
+             
+            # Rescale TD3 output to [lower_bound, upper_bound]
+            if raw < lo:
+                a_hybrid = lo - raw * (hi - lo)
+                a_hybrid = float(np.clip(a_hybrid, 0.0, 1.0))
+ 
+            elif raw == lo:
+                a_hybrid = lo
+                a_hybrid = float(np.clip(a_hybrid, 0.0, 1.0))
+ 
+            else:
+                a_hybrid = lo + raw * (hi - lo)
+                a_hybrid = float(np.clip(a_hybrid, 0.0, 1.0))
 
         pos["DDPG"].append(a_ddpg)
         pos["DQN"].append(a_dqn)
         pos["TD3"].append(a_td3)
-        pos["Hybrid"].append(a_h)
+        pos["Hybrid"].append(a_hybrid)
 
         reward, next_state, done = env.step(a_td3)
         prices.append(env.spot)
