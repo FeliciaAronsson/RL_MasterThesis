@@ -7,7 +7,7 @@ from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
 from utils.generate_report import build_report
 from utils.print import (print_hedge_table, plot_histogram, plot_learningcurve, plot_learningcurve_grid, 
-                         plot_policy_heatmaps, plot_hedge_trajectory, plot_hybrid_decomposition,)
+                         plot_policy_3d, plot_hedge_trajectory,)
 from utils.policy import (make_policy_BSM, make_policy_DDPG, make_policy_TD3, make_policy_DQN, make_policy_Hybrid,)
 
 from train.train_DDPG_TD3 import train_DDPG_TD3, train_DDPG_TD3_without_OU_noise
@@ -20,7 +20,6 @@ from models.ddpg_agent import DDPGAgent
 from models.hybrid_agent import HybridAgent
 
 np.random.seed(0)
-#torch.manual_seed(0)
 
 # Environment
 env = HedgingEnv(SPOT, STRIKE, MATURITY, VOL, MU, DT, KAPPA, C, INIT_POSITION, R)
@@ -83,13 +82,33 @@ Cost_TD3 = compute_cost(policy_TD3,  n_trails, n_steps, SPOT, STRIKE, MATURITY, 
 # Cost_DDPG_no_ou = compute_cost(policy_DDPG_no_ou, n_trails, n_steps, SPOT, STRIKE, MATURITY, R, VOL, INIT_POSITION, DT, MU, KAPPA)
 # Cost_TD3_no_ou = compute_cost(policy_TD3_no_ou,  n_trails, n_steps, SPOT, STRIKE, MATURITY, R, VOL, INIT_POSITION, DT, MU, KAPPA)
 
-52
 #### Report and Plots ###
 OptionPrice = bs_price(SPOT, STRIKE, R, MATURITY, VOL)
+agent_costs = {
+    "BSM": Cost_BSM,
+    "DDPG": Cost_DDPG,
+    "DQN": Cost_DQN,
+    "TD3": Cost_TD3,
+    "Hybrid": Cost_hybrid,
+    # "DDPG (No OU)": Cost_DDPG_no_ou,
+    # "TD3 (No OU)": Cost_TD3_no_ou,
+}
 
-print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
+all_rewards = {
+        "DDPG":   episode_rewards_DDPG,
+        "DQN":    episode_rewards_DQN,
+        "TD3":    episode_rewards_TD3,
+        "Hybrid": episode_rewards_HYBRID,
+    }
 
+selected_agents = {
+        "DDPG":   ddpg_agent,
+        "DQN":    dqn_agent,
+        "TD3":    td3_agent,
+        "Hybrid": hybrid_agent,
+    }
 
+print_hedge_table(agent_costs, OptionPrice)
 
 
 if REPORT:
@@ -101,167 +120,10 @@ if REPORT:
     )
 
 if PLOT:
-    plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid)
-    plot_learningcurve(episode_rewards_DDPG, episode_rewards_DQN,
-                       episode_rewards_TD3, episode_rewards_HYBRID)
-    plot_learningcurve_grid(episode_rewards_DDPG, episode_rewards_DQN,
-                            episode_rewards_TD3, episode_rewards_HYBRID)
-    plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent, ACTIONS_LIST, MATURITY, VOL)
-    plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent, ACTIONS_LIST, VOL)
-    plot_hybrid_decomposition(hybrid_agent, ACTIONS_LIST, MATURITY)
+    plot_histogram(agent_costs)
+    plot_learningcurve(all_rewards)
+    plot_learningcurve_grid(all_rewards)
+    plot_policy_3d(selected_agents, ACTIONS_LIST, MATURITY, VOL)
+    plot_hedge_trajectory(env, selected_agents, ACTIONS_LIST, VOL)
 
 print("Done!")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# #####
-# import pandas as pd
-# import matplotlib.pyplot as plt
-
-# # COLORS = {
-# #     "BSM":    "#2196F3",
-# #     "DDPG":   "#F44336",
-# #     "DQN":    "#4CAF50",
-# #     "TD3":    "#FF9800",
-# #     "Hybrid": "#9C27B0",
-# # }
-
-# COLORS = {
-#     "BSM":    "#2196F3",
-#     "DDPG":   "#F44336",
-#     "DDPG (No OU)":    "#4CAF50",
-#     "TD3":    "#FF9800",
-#     "TD3 (No OU)": "#9C27B0",
-# }
-
-# def print_hedge_table_hybrid(Cost_BSM, Cost_DDPG, Cost_DDPG_no_ou, Cost_TD3, Cost_TD3_no_ou, OptionPrice):
-#     HedgeComp = pd.DataFrame(
-#         {
-#             "BSM": 100 * np.array([
-#                 -np.mean(Cost_BSM),
-#                 np.std(Cost_BSM)
-#             ]) / OptionPrice,
-
-#             "DDPG": 100 * np.array([
-#                 -np.mean(Cost_DDPG),
-#                 np.std(Cost_DDPG)
-#             ]) / OptionPrice,
-
-#             "DDPG (No OU)": 100 * np.array([
-#                 -np.mean(Cost_DDPG_no_ou),
-#                 np.std(Cost_DDPG_no_ou)
-#             ]) / OptionPrice,
-
-#             "TD3": 100 * np.array([
-#                 -np.mean(Cost_TD3),
-#                 np.std(Cost_TD3)
-#             ]) / OptionPrice,
-
-#             "TD3 (No OU)": 100 * np.array([
-#                 -np.mean(Cost_TD3_no_ou),
-#                 np.std(Cost_TD3_no_ou)
-#             ]) / OptionPrice,
-
-#         },
-#         index=[
-#             "Average Hedge Cost (% of Option Price)",
-#             "STD Hedge Cost (% of Option Price)"
-#         ]
-#     )
-
-#     print(HedgeComp)
-
-# def plot_histogram_hybrid(Cost_BSM, Cost_DDPG, Cost_DDPG_no_ou, Cost_TD3, Cost_TD3_no_ou):
-#     fig, ax = plt.subplots(figsize=(11, 5))
-
-#     costs = {
-#         "BSM": Cost_BSM,
-#         "DDPG": Cost_DDPG,
-#         "DDPG (No OU)": Cost_DDPG_no_ou,
-#         "TD3": Cost_TD3,
-#         "TD3 (No OU)": Cost_TD3_no_ou,
-#     }
-
-#     all_vals = np.concatenate([-c * 100 for c in costs.values()])
-#     bins = np.linspace(
-#         np.percentile(all_vals, 1),
-#         np.percentile(all_vals, 99),
-#         40
-#     )
-
-#     for name, cost in costs.items():
-#         ax.hist(-cost * 100, bins=bins,
-#                 alpha=0.45, color=COLORS[name], label=name, edgecolor="none")
-#         ax.axvline(-np.mean(cost) * 100,
-#                 color=COLORS[name], linewidth=1.8, linestyle="--")
-
-#     ax.set_xlabel("Hedging cost", fontsize=12)
-#     ax.set_ylabel("Number of trials", fontsize=12)
-#     ax.set_title("Distribution of hedging costs across 1,000 simulated paths", fontsize=13)
-#     ax.legend(fontsize=10)
-#     ax.grid(True, alpha=0.25, axis="y")
-#     plt.tight_layout()
-#     plt.savefig("plot_histogram.png", dpi=150, bbox_inches="tight")
-#     plt.show()
-
-
-# def plot_learningcurve(rewards_DDPG_no_ou, rewards_TD3_no_ou, rewards_DDPG, rewards_TD3,
-#                     window=100):
-#     """
-#     Rolling mean learning curves for all four agents on one plot.
-#     """
-#     fig, ax = plt.subplots(figsize=(11, 5))
-
-#     all_rewards = {
-#         "DDPG (No OU)": rewards_DDPG_no_ou,
-#         "TD3 (No OU)": rewards_TD3_no_ou,
-#         "DDPG": rewards_DDPG,
-#         "TD3": rewards_TD3,
-#     }
-
-#     for name, rewards in all_rewards.items():
-#         s = pd.Series(rewards)
-#         ax.plot(s.values, alpha=0.12, color=COLORS[name], linewidth=0.8)
-#         ax.plot(s.rolling(window=window, min_periods=1).mean(),
-#                 label=f"{name} ({window}-ep avg)",
-#                 color=COLORS[name], linewidth=2)
-
-#     ax.set_xlabel("Episode", fontsize=12)
-#     ax.set_ylabel("Total episode reward", fontsize=12)
-#     ax.set_title("Learning curves - all agents", fontsize=13)
-#     ax.legend(fontsize=10)
-#     ax.grid(True, alpha=0.25)
-#     plt.tight_layout()
-#     plt.savefig("plot_learningcurve_all.png", dpi=150, bbox_inches="tight")
-#     plt.show()
-
-    
-# print_hedge_table_hybrid(Cost_BSM, Cost_DDPG, Cost_DDPG_no_ou, Cost_TD3, Cost_TD3_no_ou, OptionPrice)
-# plot_histogram_hybrid(Cost_BSM, Cost_DDPG, Cost_DDPG_no_ou, Cost_TD3, Cost_TD3_no_ou)
-# plot_learningcurve(episode_rewards_DDPG_no_ou, episode_rewards_TD3_no_ou, episode_rewards_DDPG, episode_rewards_TD3)
