@@ -79,5 +79,5 @@ def make_policy_Hybrid(hybrid_agent, actions_list):
             action = np.clip(lower_bound, 0.0, 1.0)        
         else:
             action = np.clip(lower_bound + raw_td3 * (upper_bound - lower_bound), 0.0, 1.0)
-        return action
+        return action.squeeze()
     return policy

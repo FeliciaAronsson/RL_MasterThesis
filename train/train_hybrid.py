@@ -24,13 +24,11 @@ def train_hybrid(episodes, env, agent, batch_size, score_window_length, stop_avg
             action, bin_idx, raw_td3 = agent.select(state)
             reward, next_state, done = env.step(action)
 
-            # # DQN learns to select the right bin — stores bin index as action
-            # agent.dqn.buffer.add(state, bin_idx, reward, next_state, done)
+            # DQN learns to select the right bin, stores bin index as action
+            agent.dqn.buffer.add(state, bin_idx, reward, next_state, done)
 
-            # # TD3 learns to fine-tune within the bin — stores its raw output
-            # agent.td3.buffer.add(state, raw_td3, reward, next_state, done)
-
-            agent.experience_buffer.add(state, bin_idx, raw_td3, reward, next_state, done)
+            # TD3 learns to fine-tune within the bin, stores its raw output
+            agent.td3.buffer.add(state, raw_td3, reward, next_state, done)
 
             # Train both sub-agents
             agent.train(batch_size)
