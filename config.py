@@ -8,7 +8,7 @@ VOL           = 0.2
 MU            = 0.05
 DT            = 1 / 250
 KAPPA         = 0.01
-C             = 1.5
+C             = 0
 INIT_POSITION = 0
 R             = 0
 
@@ -28,7 +28,7 @@ ACTIONS_LIST     = np.linspace(0, 1, 21)
 ACTION_DIMENSION = len(ACTIONS_LIST)
 
 # Training
-EPISODES            = 10
+EPISODES            = 200
 SCORE_WINDOW_LENGTH = 200
 STOP_AVG_REWARD     = 0
 
@@ -40,4 +40,4 @@ PLOT = True
 REPORT = True
 
 # Liquidation of large positions
-MARKET_INPACT = 0.05 # If swe to zero, market inpact will be ignored
+MARKET_INPACT = 0 # If swe to zero, market inpact will be ignored

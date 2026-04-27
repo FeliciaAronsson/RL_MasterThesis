@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import seaborn as sns
 import torch
 from utils.bs import bs_delta
@@ -218,7 +219,21 @@ def plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
         raw = hybrid_agent.td3.actor(s).item()
         lo  = actions_list[idx]
         hi  = actions_list[idx + 1] if idx + 1 < len(actions_list) else 1.0
-        return lo + raw * (hi - lo)
+      # Rescale TD3 output to [lower_bound, upper_bound]
+        if raw < lo:
+            action = lo - raw * (hi - lo)
+            action = float(np.clip(action, 0.0, 1.0))
+             
+        elif raw == lo:
+            action = lo
+            action = float(np.clip(action, 0.0, 1.0))
+             
+        else:
+            action = lo+ raw * (hi - lo)
+            action = float(np.clip(action, 0.0, 1.0))
+
+        return action
+   
 
     bsm_grid = np.array([
         [bs_delta(mR, 1.0, 0.0, t, vol) for t in ttm]
@@ -232,7 +247,7 @@ def plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
         ("Hybrid", compute_grid(hybrid_fn)),
     ]
 
-    fig, axes = plt.subplots(2, 3, figsize=(17, 9))
+    fig, axes = plt.subplots(2, 2, figsize=(17, 9))
     fig.suptitle("Policy heatmaps - hedge ratio (moneyness vs TTM, position=0.5)",
                  fontsize=13)
 
@@ -249,15 +264,96 @@ def plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
         ax.set_xticklabels(xt, rotation=45, fontsize=7)
         ax.set_yticklabels(yl, fontsize=7)
 
-    draw(axes[0, 0], bsm_grid, "BSM (reference)", COLORS["BSM"])
+    #draw(axes[0, 0], bsm_grid, "BSM (reference)", COLORS["BSM"])
 
-    positions = [(0, 1), (0, 2), (1, 0), (1, 1)]
+    positions = [(0, 1), (0, 0), (1, 0), (1, 1)]
     for (r, c), (name, grid) in zip(positions, grids):
         draw(axes[r, c], grid, name, COLORS[name])
 
-    axes[1, 2].set_visible(False)
+    #axes[1, 2].set_visible(False)
     plt.tight_layout()
     plt.savefig("plot_policy_heatmaps.png", dpi=150, bbox_inches="tight")
+    plt.show()
+
+def plot_policy_3d(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
+                   actions_list, maturity, vol, n_grid=40):
+    """
+    3D Surface plots of policy (hedge ratio) vs Moneyness and TTM.
+    """
+    # Create the meshgrid
+    # X: Time to Maturity, Y: Moneyness
+    ttm = np.linspace(1e-4, maturity, n_grid)
+    moneyness = np.linspace(0.8, 1.2, n_grid)
+    T, M = np.meshgrid(ttm, moneyness)
+
+    def compute_grid(policy_fn):
+        grid = np.zeros((n_grid, n_grid))
+        for i in range(n_grid):
+            for j in range(n_grid):
+                # Note: mR is from 'moneyness', t is from 'ttm'
+                mR, t = moneyness[i], ttm[j]
+                s = torch.tensor([[mR, t, 0.5]], dtype=torch.float32)
+                with torch.no_grad():
+                    grid[i, j] = policy_fn(s)
+        return grid
+
+    # Define policy functions (Logic remains same as your original)
+    def ddpg_fn(s): return ddpg_agent.actor(s).item()
+    def td3_fn(s): return td3_agent.actor(s).item()
+    def dqn_fn(s): return actions_list[dqn_agent.qnet(s).argmax(dim=1).item()]
+    
+    def hybrid_fn(s):
+        idx = hybrid_agent.dqn.qnet(s).argmax(dim=1).item()
+        raw = hybrid_agent.td3.actor(s).item()
+        lo, hi = actions_list[idx], actions_list[idx + 1] if idx + 1 < len(actions_list) else 1.0
+        if raw < lo:
+            action = lo - raw * (hi - lo)
+            action = float(np.clip(action, 0.0, 1.0))
+             
+        elif raw == lo:
+            action = lo
+            action = float(np.clip(action, 0.0, 1.0))
+             
+        else:
+            action = lo + raw * (hi - lo)
+            action = float(np.clip(action, 0.0, 1.0))
+
+        return action
+
+    # Compute Grids
+    #bsm_grid = np.array([[bs_delta(mR, 1.0, 0.0, t, vol) for t in ttm] for mR in moneyness])
+    
+    grids = [
+        #("BSM (Ref)", bsm_grid),
+        ("DDPG",      compute_grid(ddpg_fn)),
+        ("DQN",       compute_grid(dqn_fn)),
+        ("TD3",       compute_grid(td3_fn)),
+        ("Hybrid",    compute_grid(hybrid_fn)),
+    ]
+
+    # Setup Figure
+    fig = plt.figure(figsize=(20, 12))
+    fig.suptitle("3D Policy Surfaces: Hedge Ratio (Δ) vs Moneyness & TTM", fontsize=16)
+
+    for i, (name, grid) in enumerate(grids):
+        ax = fig.add_subplot(2, 2, i + 1, projection='3d')
+        
+        # Plot surface
+        surf = ax.plot_surface(T, M, grid, cmap=cm.RdYlGn, 
+                               linewidth=0, antialiased=True, alpha=0.8)
+        
+        # Formatting
+        ax.set_title(name, fontsize=12, fontweight='bold')
+        ax.set_xlabel('TTM')
+        ax.set_ylabel('Moneyness (S/K)')
+        ax.set_zlabel('Hedge Ratio')
+        ax.set_zlim(0, 1)
+        
+        # Adjusting the viewing angle for classic BSM perspective
+        ax.view_init(elev=30, azim=-135)
+
+    plt.tight_layout()
+    plt.savefig("plot_policy_3d.png", dpi=150)
     plt.show()
     
 def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,

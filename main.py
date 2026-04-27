@@ -7,7 +7,7 @@ from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
 from utils.generate_report import build_report
 from utils.print import (print_hedge_table, plot_histogram, plot_cost_bars, plot_learningcurve, plot_learningcurve_grid, 
-                         plot_policy_heatmaps, plot_hedge_trajectory, plot_hybrid_decomposition, get_trajectory_data)
+                         plot_policy_heatmaps, plot_hedge_trajectory, plot_hybrid_decomposition, get_trajectory_data,  plot_policy_3d)
 from utils.policy import (make_policy_BSM, make_policy_DDPG, make_policy_TD3, make_policy_DQN, make_policy_Hybrid)
 from train.train_DDPG_TD3 import train_DDPG_TD3, train_DDPG_TD3_without_OU_noise
 from train.train_DQN import train_DQN
@@ -116,19 +116,12 @@ print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_HYBRID, OptionPr
 
 traj_data = get_trajectory_data(env, dqn_agent, ddpg_agent, td3_agent, hybrid_agent, ACTIONS_LIST, VOL)
 
-# 2. Skicka med den till rapporten
-build_report(
-    Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_HYBRID, OptionPrice,
-    episode_rewards_DDPG, episode_rewards_DQN, episode_rewards_TD3, episode_rewards_HYBRID,
-    heatmap_data=traj_data, # <-- Här skickas datan in
-    output_path="hedging_report.html"
-)
-
 if REPORT:
     build_report(
         Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_HYBRID, OptionPrice,
         episode_rewards_DDPG, episode_rewards_DQN,
-        episode_rewards_TD3, episode_rewards_HYBRID,
+        episode_rewards_TD3, episode_rewards_HYBRID, traj_data, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
+        ACTIONS_LIST, VOL, MATURITY,
         output_path="hedging_report.html"
     )
 
@@ -140,7 +133,9 @@ if PLOT:
     plot_learningcurve_grid(episode_rewards_DDPG, episode_rewards_DQN,
                             episode_rewards_TD3, episode_rewards_HYBRID)
     plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent, ACTIONS_LIST, MATURITY, VOL)
+    plot_policy_3d(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
+                   ACTIONS_LIST, MATURITY, VOL, n_grid=40)
     plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent, ACTIONS_LIST, VOL)
-    plot_hybrid_decomposition(hybrid_agent, ACTIONS_LIST, MATURITY)
+    #plot_hybrid_decomposition(hybrid_agent, ACTIONS_LIST, MATURITY)
 
 print("Done!")

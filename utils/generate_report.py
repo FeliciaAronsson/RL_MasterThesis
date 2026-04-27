@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-
+import torch
+from utils.bs import bs_delta
 COLORS = {
     "BSM":    "#2196F3",
     "DDPG":   "#F44336",
@@ -13,7 +14,7 @@ COLORS = {
 
 def build_report(
     Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice,
-    rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybrid, heatmap_data,
+    rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybrid, trajectory_data, ddpg_agent, dqn_agent, td3_agent, hybrid_agent, actions_list, vol, maturity,
     output_path="hedging_report.html"
 ):
     Cost_BSM    = np.array(Cost_BSM,    dtype=float)
@@ -299,34 +300,33 @@ def build_report(
 </div>
 """)
 # ── 6. Hedge Trajectory (Dynamic) ────────────────────────────────────────
-    # ... (din befintliga kod) ...
 
-    if heatmap_data:
-        # Skapa subplots: Rad 1 för pris, Rad 2 för positioner
+    if trajectory_data:
+        
         fig_traj = make_subplots(
             rows=2, cols=1, 
             shared_xaxes=True,
             vertical_spacing=0.08,
-            row_heights=[0.0, 1.0],
+            row_heights=[0.3, 0.7],
             subplot_titles=("Asset Price Path", "Agent Hedge Positions (Delta)")
         )
 
         # Rad 1: Asset Price
         fig_traj.add_trace(go.Scatter(
-            x=heatmap_data["steps"], y=heatmap_data["prices"],
+            x=trajectory_data["steps"], y=trajectory_data["prices"],
             name="Asset Price", line=dict(color="black", width=2)
         ), row=1, col=1)
 
         # Rad 2: BSM Delta (dashed)
         fig_traj.add_trace(go.Scatter(
-            x=heatmap_data["steps"], y=heatmap_data["BSM"],
+            x=trajectory_data["steps"], y=trajectory_data["BSM"],
             name="BSM Delta", line=dict(color=COLORS["BSM"], width=2, dash='dash')
         ), row=2, col=1)
 
         # Rad 2: RL Agents
         for name in ["DDPG", "DQN", "TD3", "Hybrid"]:
             fig_traj.add_trace(go.Scatter(
-                x=heatmap_data["steps"], y=heatmap_data[name],
+                x=trajectory_data["steps"], y=trajectory_data[name],
                 name=name, line=dict(color=COLORS[name], width=1.5),
                 opacity=0.8
             ), row=2, col=1)
@@ -350,57 +350,89 @@ def build_report(
 </div>
 """)
         
-        # ──7. Hedge Trajectory (Dynamic) ────────────────────────────────────────
-    # ... (din befintliga kod) ...
 
-    if heatmap_data:
-        # Skapa subplots: Rad 1 för pris, Rad 2 för positioner
-        fig_traj = make_subplots(
-            rows=2, cols=1, 
-            shared_xaxes=True,
-            vertical_spacing=0.08,
-            row_heights=[0.0, 1.0],
-            subplot_titles=("Asset Price Path", "Agent Hedge Positions (Delta)")
+# ── 7. 3D Policy Surfaces ────────────────────────────────────────────────
+    # Assuming agents and necessary params (maturity, vol) are passed in
+    n_grid = 40
+    ttm_vec = np.linspace(1e-4, maturity, n_grid)
+    mon_vec = np.linspace(0.8, 1.2, n_grid)
+    
+    # Create the 3D subplots (2 rows, 3 columns)
+    fig_3d = make_subplots(
+        rows=2, cols=3,
+        specs=[[{'type': 'surface'}, {'type': 'surface'}, {'type': 'surface'}],
+               [{'type': 'surface'}, {'type': 'surface'}, None]],
+        subplot_titles=("BSM (Reference)", "DDPG", "DQN", "TD3", "Hybrid"),
+        vertical_spacing=0.1,
+        horizontal_spacing=0.05
+    )
+
+    # Ensure models are in eval mode
+    ddpg_agent.actor.eval()
+    td3_agent.actor.eval()
+    dqn_agent.qnet.eval()
+    hybrid_agent.dqn.qnet.eval()
+    hybrid_agent.td3.actor.eval()
+
+    def get_hybrid_val(m, t):
+        s = torch.tensor([[m, t, 0.5]], dtype=torch.float32)
+        idx = hybrid_agent.dqn.qnet(s).argmax(dim=1).item()
+        raw = hybrid_agent.td3.actor(s).item()
+        lo = actions_list[idx]
+        hi = actions_list[idx + 1] if idx + 1 < len(actions_list) else 1.0
+        return lo + raw * (hi - lo)
+
+    policy_map = [
+        ("BSM",    lambda m, t: bs_delta(m, 1.0, 0.0, t, vol)),
+        ("DDPG",   lambda m, t: ddpg_agent.actor(torch.tensor([[m, t, 0.5]], dtype=torch.float32)).item()),
+        ("DQN",    lambda m, t: actions_list[dqn_agent.qnet(torch.tensor([[m, t, 0.5]], dtype=torch.float32)).argmax(dim=1).item()]),
+        ("TD3",    lambda m, t: td3_agent.actor(torch.tensor([[m, t, 0.5]], dtype=torch.float32)).item()),
+        ("Hybrid", lambda m, t: get_hybrid_val(m, t))
+    ]
+
+    plot_positions = [(1,1), (1,2), (1,3), (2,1), (2,2)]
+
+    with torch.no_grad():
+        for (name, func), (r, c) in zip(policy_map, plot_positions):
+            # Calculate Z grid: Rows are Moneyness (y), Cols are TTM (x)
+            z_data = np.array([[func(m, t) for t in ttm_vec] for m in mon_vec])
+            
+            fig_3d.add_trace(
+                go.Surface(
+                    x=ttm_vec, 
+                    y=mon_vec, 
+                    z=z_data,
+                    colorscale='RdYlGn',
+                    showscale=False,
+                    name=name,
+                    hovertemplate="TTM: %{x:.3f}<br>Mon: %{y:.2f}<br>Delta: %{z:.3f}<extra></extra>"
+                ), row=r, col=c
+            )
+
+    # Apply camera and axis labels to all subplots
+    for i in range(1, 6):
+        scene_name = f"scene{i}" if i > 1 else "scene"
+        fig_3d.layout[scene_name].update(
+            xaxis_title='TTM',
+            yaxis_title='S/K',
+            zaxis_title='Delta',
+            camera=dict(eye=dict(x=1.6, y=-1.6, z=1.0))
         )
 
-        # Rad 1: Asset Price
-        fig_traj.add_trace(go.Scatter(
-            x=heatmap_data["steps"], y=heatmap_data["prices"],
-            name="Asset Price", line=dict(color="black", width=2)
-        ), row=1, col=1)
-
-        # Rad 2: BSM Delta (dashed)
-        fig_traj.add_trace(go.Scatter(
-            x=heatmap_data["steps"], y=heatmap_data["BSM"],
-            name="BSM Delta", line=dict(color=COLORS["BSM"], width=2, dash='dash')
-        ), row=2, col=1)
-
-        # Rad 2: RL Agents
-        for name in ["DDPG", "DQN", "TD3", "Hybrid"]:
-            fig_traj.add_trace(go.Scatter(
-                x=heatmap_data["steps"], y=heatmap_data[name],
-                name=name, line=dict(color=COLORS[name], width=1.5),
-                opacity=0.8
-            ), row=2, col=1)
-
-        fig_traj.update_layout(
-            height=700,
-            plot_bgcolor="white",
-            hovermode="x unified",
-            legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center")
-        )
-        fig_traj.update_yaxes(showgrid=True, gridcolor="#eee")
-        fig_traj.update_xaxes(showgrid=True, gridcolor="#eee")
-
-        sections.append(f"""
+    fig_3d.update_layout(
+        height=850,
+        margin=dict(t=80, b=50, l=10, r=10),
+        paper_bgcolor='white'
+    )
+    sections.append(f"""
 <div class="section">
-    <h2>6. Detailed Hedge Trajectory</h2>
-    <p class="desc">A step-by-step look at one simulated episode. 
-    The upper panel shows the price evolution, and the lower panel shows 
-    how each agent adjusted its hedge ratio in response.</p>
-    {fig_traj.to_html(full_html=False, include_plotlyjs=False)}
+  <h2>7. Policy Surfaces (3D)</h2>
+  <p class="desc">Interactive 3D visualization of the hedge ratio (Delta) as a function of 
+  Time to Maturity and Moneyness. You can click and drag to rotate the surfaces.</p>
+  {fig_3d.to_html(full_html=False, include_plotlyjs=False)}
 </div>
 """)
+
     # ── Footer ────────────────────────────────────────────────────────────────
     sections.append("""
 </div>
