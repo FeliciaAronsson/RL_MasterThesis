@@ -15,7 +15,7 @@ def bs_price(S, K, r, T, sigma):
     S = np.asarray(S, dtype=float)
     T = np.asarray(T, dtype=float)
     
-    #T_safe: division with zero not possible
+    # T_safe: making sure that division with zero is not possible
     T_safe = np.maximum(T, 1e-8)
     d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T_safe) / (sigma * np.sqrt(T_safe))
     d2 = d1 - sigma * np.sqrt(T_safe)
@@ -35,7 +35,8 @@ def bs_delta(S, K, r, T, sigma):
     """
     S = np.asarray(S, dtype=float)
     T = np.asarray(T, dtype=float)
-
+    
+    # T_safe: making sure that division with zero is not possible
     T_safe = np.maximum(T, 1e-8)
     d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T_safe) / (sigma * np.sqrt(T_safe))
     

@@ -14,7 +14,7 @@ COLORS = {
 
 def build_report(
     Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice,
-    rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybrid, trajectory_data, ddpg_agent, dqn_agent, td3_agent, hybrid_agent, actions_list, vol, maturity,
+    rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybrid, trajectory_data, policy_data, maturity,
     output_path="hedging_report.html"
 ):
     Cost_BSM    = np.array(Cost_BSM,    dtype=float)
@@ -350,89 +350,66 @@ def build_report(
 </div>
 """)
         
+ # ── 7. 3D Policy Surface Analysis ────────────────────────────────────────
+    if policy_data:
+        n_grid = 40
+        ttm_vec = np.linspace(1e-4, maturity, n_grid)
+        mon_vec = np.linspace(0.8, 1.2, n_grid)
+        fig_3d = go.Figure()
 
-# ── 7. 3D Policy Surfaces ────────────────────────────────────────────────
-    # Assuming agents and necessary params (maturity, vol) are passed in
-    n_grid = 40
-    ttm_vec = np.linspace(1e-4, maturity, n_grid)
-    mon_vec = np.linspace(0.8, 1.2, n_grid)
-    
-    # Create the 3D subplots (2 rows, 3 columns)
-    fig_3d = make_subplots(
-        rows=2, cols=3,
-        specs=[[{'type': 'surface'}, {'type': 'surface'}, {'type': 'surface'}],
-               [{'type': 'surface'}, {'type': 'surface'}, None]],
-        subplot_titles=("BSM (Reference)", "DDPG", "DQN", "TD3", "Hybrid"),
-        vertical_spacing=0.1,
-        horizontal_spacing=0.05
-    )
+        # Add BSM as a semi-transparent reference surface that is always visible
+        fig_3d.add_trace(go.Surface(
+            x = ttm_vec, y = mon_vec, z=policy_data["BSM"],
+            colorscale='Blues', opacity=0.4, name="BSM (Ref)", showscale=False
+        ))
 
-    # Ensure models are in eval mode
-    ddpg_agent.actor.eval()
-    td3_agent.actor.eval()
-    dqn_agent.qnet.eval()
-    hybrid_agent.dqn.qnet.eval()
-    hybrid_agent.td3.actor.eval()
+        # Add traces for each RL agent (initially hidden except the first one)
+        for name in ["DDPG", "DQN", "TD3", "Hybrid"]:
+            fig_3d.add_trace(go.Surface(
+                x=ttm_vec, y=mon_vec, z=policy_data[name],
+                colorscale='RdYlGn', name=name, visible=False, showscale=True,
+                colorbar=dict(title="Hedge Ratio", x=1.1)
+            ))
 
-    def get_hybrid_val(m, t):
-        s = torch.tensor([[m, t, 0.5]], dtype=torch.float32)
-        idx = hybrid_agent.dqn.qnet(s).argmax(dim=1).item()
-        raw = hybrid_agent.td3.actor(s).item()
-        lo = actions_list[idx]
-        hi = actions_list[idx + 1] if idx + 1 < len(actions_list) else 1.0
-        return lo + raw * (hi - lo)
+        # Make the first RL agent (DDPG) visible by default
+        fig_3d.data[1].visible = True
 
-    policy_map = [
-        ("BSM",    lambda m, t: bs_delta(m, 1.0, 0.0, t, vol)),
-        ("DDPG",   lambda m, t: ddpg_agent.actor(torch.tensor([[m, t, 0.5]], dtype=torch.float32)).item()),
-        ("DQN",    lambda m, t: actions_list[dqn_agent.qnet(torch.tensor([[m, t, 0.5]], dtype=torch.float32)).argmax(dim=1).item()]),
-        ("TD3",    lambda m, t: td3_agent.actor(torch.tensor([[m, t, 0.5]], dtype=torch.float32)).item()),
-        ("Hybrid", lambda m, t: get_hybrid_val(m, t))
-    ]
-
-    plot_positions = [(1,1), (1,2), (1,3), (2,1), (2,2)]
-
-    with torch.no_grad():
-        for (name, func), (r, c) in zip(policy_map, plot_positions):
-            # Calculate Z grid: Rows are Moneyness (y), Cols are TTM (x)
-            z_data = np.array([[func(m, t) for t in ttm_vec] for m in mon_vec])
+        # Create buttons for the dropdown menu
+        buttons = []
+        for i, name in enumerate(["DDPG", "DQN", "TD3", "Hybrid"]):
+            # visibility list: [True (for BSM), False, False, False, False]
+            visibility = [True] + [False] * 4
+            visibility[i + 1] = True
             
-            fig_3d.add_trace(
-                go.Surface(
-                    x=ttm_vec, 
-                    y=mon_vec, 
-                    z=z_data,
-                    colorscale='RdYlGn',
-                    showscale=False,
-                    name=name,
-                    hovertemplate="TTM: %{x:.3f}<br>Mon: %{y:.2f}<br>Delta: %{z:.3f}<extra></extra>"
-                ), row=r, col=c
-            )
+            buttons.append(dict(
+                label=name,
+                method="update",
+                args=[{"visible": visibility},
+                    {"title": f"Policy Surface: {name} vs BSM"}]
+            ))
 
-    # Apply camera and axis labels to all subplots
-    for i in range(1, 6):
-        scene_name = f"scene{i}" if i > 1 else "scene"
-        fig_3d.layout[scene_name].update(
-            xaxis_title='TTM',
-            yaxis_title='S/K',
-            zaxis_title='Delta',
-            camera=dict(eye=dict(x=1.6, y=-1.6, z=1.0))
+        fig_3d.update_layout(
+            updatemenus=[dict(buttons=buttons, direction="down", showactive=True, x=0.1, y=1.15)],
+            scene=dict(
+                xaxis_title='Time to Maturity',
+                yaxis_title='Moneyness (S/K)',
+                zaxis_title='Hedge Ratio (Δ)',
+                camera=dict(eye=dict(x=1.8, y=-1.8, z=1.2))
+            ),
+            height=800,
+            margin=dict(t=100, b=50, l=50, r=50)
         )
 
-    fig_3d.update_layout(
-        height=850,
-        margin=dict(t=80, b=50, l=10, r=10),
-        paper_bgcolor='white'
-    )
     sections.append(f"""
 <div class="section">
-  <h2>7. Policy Surfaces (3D)</h2>
-  <p class="desc">Interactive 3D visualization of the hedge ratio (Delta) as a function of 
-  Time to Maturity and Moneyness. You can click and drag to rotate the surfaces.</p>
-  {fig_3d.to_html(full_html=False, include_plotlyjs=False)}
+    <h2>7. Policy Surface Topography</h2>
+    <p class="desc">This 3D surface shows the agent's "decision map." The ghosted blue surface is the 
+    Black-Scholes Delta. Use the dropdown to compare different RL architectures. 
+    <b>Look for:</b> The "sharpness" of the cliff at expiration (TTM=0) and the smoothness of the surface.</p>
+    {fig_3d.to_html(full_html=False, include_plotlyjs=False)}
 </div>
 """)
-
+#
     # ── Footer ────────────────────────────────────────────────────────────────
     sections.append("""
 </div>

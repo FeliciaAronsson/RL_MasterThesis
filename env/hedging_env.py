@@ -59,7 +59,7 @@ class HedgingEnv:
 
         # Used for Liquidation of large positions
         trading_size = abs(action-pos_prev)
-        linear_cost = trading_size *spot_next * self.kappa
+        linear_cost = trading_size * spot_next * self.kappa
         impact_cost = MARKET_INPACT * (trading_size**2) * spot_next
         total_transaction_cost = linear_cost + impact_cost
 

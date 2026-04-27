@@ -7,7 +7,7 @@ from utils.bs import bs_delta, bs_price
 from utils.compute_cost import compute_cost
 from utils.generate_report import build_report
 from utils.print import (print_hedge_table, plot_histogram, plot_cost_bars, plot_learningcurve, plot_learningcurve_grid, 
-                         plot_policy_heatmaps, plot_hedge_trajectory, plot_hybrid_decomposition, get_trajectory_data,  plot_policy_3d)
+                         plot_policy_heatmaps, plot_hedge_trajectory, plot_hybrid_decomposition, get_trajectory_data,  plot_policy_3d, get_policy_3d_grids)
 from utils.policy import (make_policy_BSM, make_policy_DDPG, make_policy_TD3, make_policy_DQN, make_policy_Hybrid)
 from train.train_DDPG_TD3 import train_DDPG_TD3, train_DDPG_TD3_without_OU_noise
 from train.train_DQN import train_DQN
@@ -115,13 +115,13 @@ print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_HYBRID, OptionPr
 #plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent, ACTIONS_LIST, VOL)
 
 traj_data = get_trajectory_data(env, dqn_agent, ddpg_agent, td3_agent, hybrid_agent, ACTIONS_LIST, VOL)
+policy_data = get_policy_3d_grids(dqn_agent, ddpg_agent, td3_agent, hybrid_agent, ACTIONS_LIST, MATURITY, VOL)
 
 if REPORT:
     build_report(
         Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_HYBRID, OptionPrice,
         episode_rewards_DDPG, episode_rewards_DQN,
-        episode_rewards_TD3, episode_rewards_HYBRID, traj_data, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
-        ACTIONS_LIST, VOL, MATURITY,
+        episode_rewards_TD3, episode_rewards_HYBRID, traj_data, policy_data, MATURITY,
         output_path="hedging_report.html"
     )
 

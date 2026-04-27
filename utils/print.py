@@ -264,7 +264,7 @@ def plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
         ax.set_xticklabels(xt, rotation=45, fontsize=7)
         ax.set_yticklabels(yl, fontsize=7)
 
-    #draw(axes[0, 0], bsm_grid, "BSM (reference)", COLORS["BSM"])
+    draw(axes[0, 0], bsm_grid, "BSM (reference)", COLORS["BSM"])
 
     positions = [(0, 1), (0, 0), (1, 0), (1, 1)]
     for (r, c), (name, grid) in zip(positions, grids):
@@ -321,10 +321,10 @@ def plot_policy_3d(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
         return action
 
     # Compute Grids
-    #bsm_grid = np.array([[bs_delta(mR, 1.0, 0.0, t, vol) for t in ttm] for mR in moneyness])
+    bsm_grid = np.array([[bs_delta(mR, 1.0, 0.0, t, vol) for t in ttm] for mR in moneyness])
     
     grids = [
-        #("BSM (Ref)", bsm_grid),
+        ("BSM (Ref)", bsm_grid),
         ("DDPG",      compute_grid(ddpg_fn)),
         ("DQN",       compute_grid(dqn_fn)),
         ("TD3",       compute_grid(td3_fn)),
@@ -336,7 +336,7 @@ def plot_policy_3d(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
     fig.suptitle("3D Policy Surfaces: Hedge Ratio (Δ) vs Moneyness & TTM", fontsize=16)
 
     for i, (name, grid) in enumerate(grids):
-        ax = fig.add_subplot(2, 2, i + 1, projection='3d')
+        ax = fig.add_subplot(2, 3, i + 1, projection='3d')
         
         # Plot surface
         surf = ax.plot_surface(T, M, grid, cmap=cm.RdYlGn, 
@@ -577,3 +577,45 @@ def get_trajectory_data(env, dqn_agent, ddpg_agent, td3_agent, hybrid_agent, act
         data[name].append(data[name][-1]) # Håll sista positionen vid förfall
         
     return data
+
+def get_policy_3d_grids(dqn_agent, ddpg_agent, td3_agent, hybrid_agent, actions_list, maturity, vol, n_grid=40):
+    ttm_vec = np.linspace(1e-4, maturity, n_grid)
+    mon_vec = np.linspace(0.8, 1.2, n_grid)
+    
+    # Initialize grids
+    grids = {name: np.zeros((n_grid, n_grid)) for name in ["BSM", "DDPG", "DQN", "TD3", "Hybrid"]}
+
+    # Ensure eval mode
+    ddpg_agent.actor.eval(); td3_agent.actor.eval()
+    dqn_agent.qnet.eval(); hybrid_agent.dqn.qnet.eval(); hybrid_agent.td3.actor.eval()
+
+    with torch.no_grad():
+        for i, m in enumerate(mon_vec):
+            for j, t in enumerate(ttm_vec):
+                s = torch.tensor([[m, t, 0.5]], dtype=torch.float32)
+                
+                # BSM
+                grids["BSM"][i, j] = bs_delta(m, 1.0, 0.0, t, vol)
+                
+                # RL Agents
+                grids["DDPG"][i, j] = ddpg_agent.actor(s).item()
+                grids["TD3"][i, j]  = td3_agent.actor(s).item()
+                grids["DQN"][i, j]  = actions_list[dqn_agent.qnet(s).argmax(dim=1).item()]
+                
+                # Hybrid Logic
+                idx = hybrid_agent.dqn.qnet(s).argmax(dim=1).item()
+                raw = hybrid_agent.td3.actor(s).item()
+                lo = actions_list[idx]
+                hi = actions_list[idx+1] if idx+1 < len(actions_list) else 1.0
+
+
+                if raw < lo:
+                    grids["Hybrid"][i, j] = lo - raw * (hi - lo)
+
+                elif raw == lo:
+                    grids["Hybrid"][i, j] = lo 
+                
+                else:
+                    grids["Hybrid"][i, j] = lo + raw * (hi - lo)
+                
+    return grids
