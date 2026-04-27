@@ -9,6 +9,11 @@ class HybridAgent:
         self.actions_list = actions_list 
 
         self.experience_buffer = ExperienceBuffer()
+        self.dqn.buffer = self.experience_buffer
+        self.td3.buffer = self.experience_buffer
+
+        self.dqn.buffer.sample = self.experience_buffer.sample_for_dqn
+        self.td3.buffer.sample = self.experience_buffer.sample_for_td3
 
     def select(self, state):
         # DQN selects bin

@@ -67,11 +67,17 @@ def make_policy_Hybrid(hybrid_agent, actions_list):
         with torch.no_grad():
             bin_idx = hybrid_agent.dqn.qnet(state_tensor).argmax(dim=1).cpu().numpy()
             raw_td3 = hybrid_agent.td3.actor(state_tensor).cpu().numpy().squeeze()
-        lower = actions_list[bin_idx]
-        upper = np.where(
+        lower_bound = actions_list[bin_idx]
+        upper_bound = np.where(
             bin_idx + 1 < len(actions_list),
             actions_list[np.minimum(bin_idx + 1, len(actions_list) - 1)],
             1.0
         )
-        return np.clip(lower + raw_td3 * (upper - lower), 0.0, 1.0)
+        if raw_td3[0] < lower_bound[0]:
+            action = np.clip(lower_bound - raw_td3 * (upper_bound - lower_bound), 0.0, 1.0)           
+        elif raw_td3[0] == lower_bound[0]:
+            action = np.clip(lower_bound, 0.0, 1.0)        
+        else:
+            action = np.clip(lower_bound + raw_td3 * (upper_bound - lower_bound), 0.0, 1.0)
+        return action
     return policy

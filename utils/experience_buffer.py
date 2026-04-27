@@ -9,7 +9,7 @@ class ExperienceBuffer:
     Collecive experience
     """
     def __init__(self, size=1_000_000):
-        self.experience_buffer = []
+        self.buffer = []
         self.size = size
 
     def add(self, state, action_agent1, action_agent2, reward, next_state, done):
@@ -24,19 +24,31 @@ class ExperienceBuffer:
         :param done: Done if time to maturity (TTM) is reached
         """
     
-        if len(self.experience_buffer) >= self.size:
-            self.experience_buffer.pop(0)
-        self.experience_buffer.append((state, action_agent1, action_agent2, reward, next_state, done))
+        if len(self.buffer) >= self.size:
+            self.buffer.pop(0)
+        self.buffer.append((state, action_agent1, action_agent2, reward, next_state, done))
 
 
-    def sample(self, batch):
-        """
-        Train the agents network (Actor-Critic) on a random barch
-        """
-        samples = random.sample(self.experience_buffer, batch)
-        state, action_agent1, action_agent2, reward, next_state, done =  map(np.array, zip(*samples))
+    # def sample(self, batch):
+    #     """
+    #     Train the agents network (Actor-Critic) on a random barch
+    #     """
+    #     samples = random.sample(self.experience_buffer, batch)
+    #     state, action_agent1, action_agent2, reward, next_state, done =  map(np.array, zip(*samples))
         
-        return state, action_agent1, action_agent2, reward, next_state, done
+    #     return state, action_agent1, action_agent2, reward, next_state, done
+
+    def sample_for_dqn(self, batch_size):
+        samples = random.sample(self.buffer, batch_size)
+        # Packa upp, men ge DQN bara action_agent1 (indexet)
+        s, a1, a2, r, s2, d = zip(*samples)
+        return map(np.array, [s, a1, r, s2, d])
+
+    def sample_for_td3(self, batch_size):
+        samples = random.sample(self.buffer, batch_size)
+        # Packa upp, men ge TD3 bara action_agent2 (kontinuerliga värdet)
+        s, a1, a2, r, s2, d = zip(*samples)
+        return map(np.array, [s, a2, r, s2, d])
     
     def __len__(self):
-        return len(self.experience_buffer)
+        return len(self.buffer)

@@ -87,7 +87,7 @@ Cost_TD3 = compute_cost(policy_TD3,  n_trails, n_steps, SPOT, STRIKE, MATURITY, 
 #### Report and Plots ###
 OptionPrice = bs_price(SPOT, STRIKE, R, MATURITY, VOL)
 
-#print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
+print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice)
 
 
 
