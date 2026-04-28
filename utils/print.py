@@ -14,6 +14,7 @@ COLORS = {
     "DQN":    "#4CAF50",
     "TD3":    "#FF9800",
     "Hybrid": "#9C27B0",
+    "Hybrid Sequential": "#009688",
 }
 
 
@@ -33,11 +34,11 @@ def print_hedge_table(agent_costs, OptionPrice):
         data,
         index = ["Mean hedge cost (% option price)", "Std hedge cost  (% option price)"]
     )
-    print("\n" + "="*65)
-    print("  Hedging Performance Summary ({',.join(agent_costs.keys())})")
-    print("="*65)
+    print("\n" + "="*80)
+    print("  Hedging Performance Summary ")
+    print("="*80)
     print(HedgeComp.round(3).to_string())
-    print("="*65 + "\n")
+    print("="*80 + "\n")
 
 
 def plot_histogram(agent_costs):
@@ -141,7 +142,7 @@ def plot_policy_3d(selected_agents, actions_list, maturity, vol, n_grid=25):
                     elif agent_name == "DQN":
                         agent_obj.qnet.eval()
                         val = actions_list[agent_obj.qnet(s).argmax(dim=1).item()]
-                    elif agent_name == "Hybrid":
+                    elif agent_name == "Hybrid" or agent_name == "Hybrid Sequential":
                         agent_obj.dqn.qnet.eval()
                         agent_obj.td3.actor.eval()
                         idx = agent_obj.dqn.qnet(s).argmax(dim=1).item()
@@ -159,7 +160,7 @@ def plot_policy_3d(selected_agents, actions_list, maturity, vol, n_grid=25):
 
     bsm_grid = np.array([[bs_delta(mR, 1.0, 0.0, t, vol) for t in ttm] for mR in moneyness])
 
-    plot_list = [("BSM (Ref)", bsm_grid)]
+    plot_list = [("BSM", bsm_grid)]
     for name, agent in selected_agents.items():
         plot_list.append((name, get_grid(name, agent)))
 
@@ -207,7 +208,7 @@ def plot_hedge_trajectory(env, selected_agents, actions_list, vol):
                     val = agent.actor(s).item()
                 elif name == "DQN":
                     val = actions_list[agent.qnet(s).argmax(dim=1).item()]
-                elif name == "Hybrid":
+                elif name == "Hybrid" or name == "Hybrid Sequential":
                     idx = agent.dqn.qnet(s).argmax(dim=1).item()
                     raw = agent.td3.actor(s).item()
                     lo, hi = actions_list[idx], actions_list[idx+1] if idx+1 < len(actions_list) else 1.0
