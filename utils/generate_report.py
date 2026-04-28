@@ -357,6 +357,13 @@ def build_report(
         mon_vec = np.linspace(0.8, 1.2, n_grid)
         fig_3d = go.Figure()
 
+        fig_3d = make_subplots(
+            rows=2, cols=3, 
+            shared_xaxes=True,
+            vertical_spacing=0.08,
+            row_heights=[0.3, 0.7],
+            subplot_titles=("Asset Price Path", "Agent Hedge Positions (Delta)")
+        )
         # Add BSM as a semi-transparent reference surface that is always visible
         fig_3d.add_trace(go.Surface(
             x = ttm_vec, y = mon_vec, z=policy_data["BSM"],
@@ -374,23 +381,8 @@ def build_report(
         # Make the first RL agent (DDPG) visible by default
         fig_3d.data[1].visible = True
 
-        # Create buttons for the dropdown menu
-        buttons = []
-        for i, name in enumerate(["DDPG", "DQN", "TD3", "Hybrid"]):
-            # visibility list: [True (for BSM), False, False, False, False]
-            visibility = [True] + [False] * 4
-            visibility[i + 1] = True
-            
-            buttons.append(dict(
-                label=name,
-                method="update",
-                args=[{"visible": visibility},
-                    {"title": f"Policy Surface: {name} vs BSM"}]
-            ))
-
         fig_3d.update_layout(
-            updatemenus=[dict(buttons=buttons, direction="down", showactive=True, x=0.1, y=1.15)],
-            scene=dict(
+                scene=dict(
                 xaxis_title='Time to Maturity',
                 yaxis_title='Moneyness (S/K)',
                 zaxis_title='Hedge Ratio (Δ)',
@@ -404,8 +396,7 @@ def build_report(
 <div class="section">
     <h2>7. Policy Surface Topography</h2>
     <p class="desc">This 3D surface shows the agent's "decision map." The ghosted blue surface is the 
-    Black-Scholes Delta. Use the dropdown to compare different RL architectures. 
-    <b>Look for:</b> The "sharpness" of the cliff at expiration (TTM=0) and the smoothness of the surface.</p>
+    Black-Scholes Delta. Use the dropdown to compare different RL architectures.</p>
     {fig_3d.to_html(full_html=False, include_plotlyjs=False)}
 </div>
 """)

@@ -8,7 +8,7 @@ VOL           = 0.2
 MU            = 0.05
 DT            = 1 / 250
 KAPPA         = 0.01
-C             = 0
+C             = 1.5
 INIT_POSITION = 0
 R             = 0
 
@@ -28,7 +28,7 @@ ACTIONS_LIST     = np.linspace(0, 1, 21)
 ACTION_DIMENSION = len(ACTIONS_LIST)
 
 # Training
-EPISODES            = 500
+EPISODES            = 10
 SCORE_WINDOW_LENGTH = 200
 STOP_AVG_REWARD     = 0
 
