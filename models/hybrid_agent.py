@@ -12,7 +12,7 @@ class HybridAgent:
         
 
     def select(self, state):
-        # DQN selects coarse bin
+        # DQN selects bin
         bin_idx = self.dqn.select(state)
         lower_bound = self.actions_list[bin_idx]
         upper_bound = (

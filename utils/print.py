@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,6 +7,10 @@ from matplotlib import cm
 import seaborn as sns
 import torch
 from utils.bs import bs_delta
+<<<<<<< HEAD
+=======
+from matplotlib import cm
+>>>>>>> origin/resultBranch
 
 COLORS = {
     "BSM":    "#2196F3",
@@ -12,41 +18,34 @@ COLORS = {
     "DQN":    "#4CAF50",
     "TD3":    "#FF9800",
     "Hybrid": "#9C27B0",
+    "Hybrid Sequential": "#009688",
 }
 
 
-def print_hedge_table(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice):
+def print_hedge_table(agent_costs, OptionPrice):
     """
     Summary table of hedging performance for all agents.
     Reports mean cost, std, mean/std ratio, and worst-case (5th percentile).
     All values expressed as percentage of option price.
     """
-    def stats(cost):
+    data = {}
+    for name, cost in agent_costs.items():
         mean  = -np.mean(cost)
         std   =  np.std(cost)
-        return 100 * np.array([mean, std]) / OptionPrice
+        data[name] = 100 * np.array([mean, std]) / OptionPrice
 
     HedgeComp = pd.DataFrame(
-        {
-            "BSM":    stats(Cost_BSM),
-            "DDPG":   stats(Cost_DDPG),
-            "DQN":    stats(Cost_DQN),
-            "TD3":    stats(Cost_TD3),
-            "Hybrid": stats(Cost_hybrid),
-        },
-        index=[
-            "Mean hedge cost (% option price)",
-            "Std hedge cost  (% option price)",
-        ]
+        data,
+        index = ["Mean hedge cost (% option price)", "Std hedge cost  (% option price)"]
     )
-    print("\n" + "="*65)
-    print("  Hedging Performance Summary")
-    print("="*65)
+    print("\n" + "="*80)
+    print("  Hedging Performance Summary ")
+    print("="*80)
     print(HedgeComp.round(3).to_string())
-    print("="*65 + "\n")
+    print("="*80 + "\n")
 
 
-def plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice):
+def plot_histogram(agent_costs):
     """
     Overlapping histogram of hedging cost distributions for all five strategies.
     Dashed vertical lines mark each distribution's mean.
@@ -54,28 +53,20 @@ def plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionP
     """
     fig, ax = plt.subplots(figsize=(11, 5))
 
-    costs = {
-        "BSM":    Cost_BSM,
-        "DDPG":   Cost_DDPG,
-        "DQN":    Cost_DQN,
-        "TD3":    Cost_TD3,
-        "Hybrid": Cost_hybrid,
-    }
-
-    all_vals = np.concatenate([-c / OptionPrice * 100 for c in costs.values()])
+    all_vals = np.concatenate([-c * 100 for c in agent_costs.values()])
     bins = np.linspace(
         np.percentile(all_vals, 1),
         np.percentile(all_vals, 99),
         40
     )
 
-    for name, cost in costs.items():
-        ax.hist(-cost / OptionPrice * 100, bins=bins,
+    for name, cost in agent_costs.items():
+        ax.hist(-cost * 100, bins=bins,
                 alpha=0.45, color=COLORS[name], label=name, edgecolor="none")
-        ax.axvline(-np.mean(cost) / OptionPrice * 100,
+        ax.axvline(-np.mean(cost) * 100,
                    color=COLORS[name], linewidth=1.8, linestyle="--")
 
-    ax.set_xlabel("Hedging cost (% of option price)", fontsize=12)
+    ax.set_xlabel("Hedging cost", fontsize=12)
     ax.set_ylabel("Number of trials", fontsize=12)
     ax.set_title("Distribution of hedging costs across 1,000 simulated paths", fontsize=13)
     ax.legend(fontsize=10)
@@ -84,53 +75,12 @@ def plot_histogram(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionP
     plt.savefig("plot_histogram.png", dpi=150, bbox_inches="tight")
     plt.show()
 
-
-def plot_cost_bars(Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice):
-    """
-    Bar chart comparing mean hedging cost with +/- 1 std error bars.
-    """
-    agents = ["BSM", "DDPG", "DQN", "TD3", "Hybrid"]
-    costs  = [Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid]
-
-    means = [-np.mean(c) / OptionPrice * 100 for c in costs]
-    stds  = [ np.std(c)  / OptionPrice * 100 for c in costs]
-
-    fig, ax = plt.subplots(figsize=(9, 5))
-    bars = ax.bar(agents, means,
-                  color=[COLORS[a] for a in agents],
-                  alpha=0.8, edgecolor="white", linewidth=0.8, width=0.55)
-    ax.errorbar(agents, means, yerr=stds,
-                fmt="none", color="black",
-                capsize=5, linewidth=1.5, capthick=1.5)
-
-    for bar, mean, std in zip(bars, means, stds):
-        ax.text(bar.get_x() + bar.get_width() / 2,
-                mean + std + 0.3,
-                f"{mean:.1f}",
-                ha="center", va="bottom", fontsize=9)
-
-    ax.set_ylabel("Mean hedging cost (% of option price)", fontsize=12)
-    ax.set_title("Mean hedging cost +/- 1 standard deviation", fontsize=13)
-    ax.grid(True, alpha=0.25, axis="y")
-    ax.set_axisbelow(True)
-    plt.tight_layout()
-    plt.savefig("plot_cost_bars.png", dpi=150, bbox_inches="tight")
-    plt.show()
-
-
-def plot_learningcurve(rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybrid,
+def plot_learningcurve(all_rewards,
                        window=100):
     """
     Rolling mean learning curves for all four agents on one plot.
     """
     fig, ax = plt.subplots(figsize=(11, 5))
-
-    all_rewards = {
-        "DDPG":   rewards_DDPG,
-        "DQN":    rewards_DQN,
-        "TD3":    rewards_TD3,
-        "Hybrid": rewards_Hybrid,
-    }
 
     for name, rewards in all_rewards.items():
         s = pd.Series(rewards)
@@ -149,7 +99,7 @@ def plot_learningcurve(rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybrid,
     plt.show()
 
 
-def plot_learningcurve_grid(rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybrid,
+def plot_learningcurve_grid(all_rewards,
                             window=100):
     """
     2x2 grid of individual learning curves, one panel per agent.
@@ -157,14 +107,8 @@ def plot_learningcurve_grid(rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybr
     fig, axes = plt.subplots(2, 2, figsize=(13, 8), sharey=True)
     fig.suptitle("Individual learning curves", fontsize=14)
 
-    pairs = [
-        ("DDPG",   rewards_DDPG,   axes[0, 0]),
-        ("DQN",    rewards_DQN,    axes[0, 1]),
-        ("TD3",    rewards_TD3,    axes[1, 0]),
-        ("Hybrid", rewards_Hybrid, axes[1, 1]),
-    ]
-
-    for name, rewards, ax in pairs:
+    for name, rewards in all_rewards.items():
+        ax = axes.flatten()[list(all_rewards.keys()).index(name)]
         s = pd.Series(rewards)
         ax.plot(s.values, alpha=0.2, color=COLORS[name], linewidth=0.8)
         ax.plot(s.rolling(window=window, min_periods=1).mean(),
@@ -180,38 +124,55 @@ def plot_learningcurve_grid(rewards_DDPG, rewards_DQN, rewards_TD3, rewards_Hybr
     plt.savefig("plot_learningcurve_grid.png", dpi=150, bbox_inches="tight")
     plt.show()
 
-
-def plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
-                         actions_list, maturity, vol, n_grid=40):
+def plot_policy_3d(selected_agents, actions_list, maturity, vol, n_grid=25):
     """
-    2x3 grid of policy heatmaps showing each agent's hedge ratio as a function
-    of moneyness (S/K) and time to maturity, with position fixed at 0.5.
-    BSM delta shown as reference in top-left panel.
+    3D Surface plots of policy (hedge ratio) vs Moneyness and TTM.
     """
+    ttm = np.linspace(1e-4, maturity, n_grid)
     moneyness = np.linspace(0.8, 1.2, n_grid)
-    ttm       = np.linspace(1e-4, maturity, n_grid)
+    T, M = np.meshgrid(ttm, moneyness)
 
-    def compute_grid(policy_fn):
+    def get_grid(agent_name, agent_obj):
         grid = np.zeros((n_grid, n_grid))
-        for i, mR in enumerate(moneyness):
-            for j, t in enumerate(ttm):
+        for i in range(n_grid):
+            for j in range(n_grid):
+                mR, t = moneyness[i], ttm[j]
                 s = torch.tensor([[mR, t, 0.5]], dtype=torch.float32)
+                
                 with torch.no_grad():
-                    grid[i, j] = policy_fn(s)
+                    if agent_name == "DDPG" or agent_name == "TD3":
+                        agent_obj.actor.eval()
+                        val = agent_obj.actor(s).item()
+                    elif agent_name == "DQN":
+                        agent_obj.qnet.eval()
+                        val = actions_list[agent_obj.qnet(s).argmax(dim=1).item()]
+                    elif agent_name == "Hybrid" or agent_name == "Hybrid Sequential":
+                        agent_obj.dqn.qnet.eval()
+                        agent_obj.td3.actor.eval()
+                        idx = agent_obj.dqn.qnet(s).argmax(dim=1).item()
+                        raw = agent_obj.td3.actor(s).item()
+                        lo = actions_list[idx]
+                        hi = actions_list[idx + 1] if idx + 1 < len(actions_list) else 1.0
+                        if raw < lo:
+                            val = np.clip(lo - raw * (hi - lo), 0.0, 1.0)
+                        elif raw == lo:
+                            val = lo
+                        else:
+                            val = np.clip(lo + raw * (hi - lo), 0.0, 1.0)
+                    grid[i, j] = val
         return grid
 
-    def ddpg_fn(s):
-        ddpg_agent.actor.eval()
-        return ddpg_agent.actor(s).item()
+    bsm_grid = np.array([[bs_delta(mR, 1.0, 0.0, t, vol) for t in ttm] for mR in moneyness])
 
-    def td3_fn(s):
-        td3_agent.actor.eval()
-        return td3_agent.actor(s).item()
+    plot_list = [("BSM", bsm_grid)]
+    for name, agent in selected_agents.items():
+        plot_list.append((name, get_grid(name, agent)))
 
-    def dqn_fn(s):
-        dqn_agent.qnet.eval()
-        return actions_list[dqn_agent.qnet(s).argmax(dim=1).item()]
+    num_plots = len(plot_list)
+    cols = 3
+    rows = math.ceil(num_plots / cols)
 
+<<<<<<< HEAD
     def hybrid_fn(s):
         hybrid_agent.dqn.qnet.eval()
         hybrid_agent.td3.actor.eval()
@@ -271,10 +232,31 @@ def plot_policy_heatmaps(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
         draw(axes[r, c], grid, name, COLORS[name])
 
     #axes[1, 2].set_visible(False)
+=======
+    fig = plt.figure(figsize=(6 * cols, 5 * rows))
+    fig.suptitle("3D Policy Surfaces: Hedge Ratio (Δ) vs Moneyness & TTM", fontsize=16)
+
+    for i, (name, grid) in enumerate(plot_list):
+        ax = fig.add_subplot(rows, cols, i + 1, projection='3d')
+        
+        # Plot surface
+        surf = ax.plot_surface(T, M, grid, cmap=cm.RdYlGn, 
+                               linewidth=0, antialiased=True, alpha=0.8)
+        
+        color = COLORS.get(name.split()[0], "black")
+        ax.set_title(name, fontsize=12, fontweight='bold', color=color)
+        ax.set_xlabel('TTM')
+        ax.set_ylabel('Moneyness (S/K)')
+        ax.set_zlabel('Hedge Ratio')
+        ax.set_zlim(0, 1)
+        ax.view_init(elev=30, azim=-135)
+
+>>>>>>> origin/resultBranch
     plt.tight_layout()
-    plt.savefig("plot_policy_heatmaps.png", dpi=150, bbox_inches="tight")
+    plt.savefig("plot_policy_3d_dynamic.png", dpi=150)
     plt.show()
 
+<<<<<<< HEAD
 def plot_policy_3d(ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
                    actions_list, maturity, vol, n_grid=40):
     """
@@ -365,17 +347,28 @@ def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
     np.random.seed(42)
 
 
+=======
+def plot_hedge_trajectory(env, selected_agents, actions_list, vol):
+>>>>>>> origin/resultBranch
     state = env.reset()
-    done  = False
+    done = False
 
+<<<<<<< HEAD
     prices  = [env.spot]
     bsm_pos = [bs_delta(env.spot, env.strike, env.rate, env.maturity, vol)]
     pos     = {name: [] for name in ["DDPG", "DQN", "TD3", "Hybrid"]}
+=======
+    prices = [env.spot]
+    bsm_pos = [bs_delta(env.spot, env.strike, env.rate, env.maturity, vol)]
+    
+    agent_trajectories = {name: [] for name in selected_agents.keys()}
+>>>>>>> origin/resultBranch
 
     while not done:
         state = np.array(state)
         s = torch.tensor([state], dtype=torch.float32)
         
+<<<<<<< HEAD
 
         with torch.no_grad():
             ddpg_agent.actor.eval()
@@ -420,28 +413,53 @@ def plot_hedge_trajectory(env, ddpg_agent, dqn_agent, td3_agent, hybrid_agent,
         bsm_pos.append(
             bs_delta(env.spot, env.strike, env.rate, env.maturity, vol))
         
+=======
+        for name, agent in selected_agents.items():
+            with torch.no_grad():
+                if name == "DDPG" or name == "TD3":
+                    val = agent.actor(s).item()
+                elif name == "DQN":
+                    val = actions_list[agent.qnet(s).argmax(dim=1).item()]
+                elif name == "Hybrid" or name == "Hybrid Sequential":
+                    idx = agent.dqn.qnet(s).argmax(dim=1).item()
+                    raw = agent.td3.actor(s).item()
+                    lo, hi = actions_list[idx], actions_list[idx+1] if idx+1 < len(actions_list) else 1.0
+                    
+                    if raw < lo:
+                        val = float(np.clip(lo - raw * (hi - lo), 0.0, 1.0))    
+                    elif raw == lo:
+                        val = float(np.clip(lo, 0.0, 1.0))             
+                    else:
+                        val = float(np.clip(lo + raw * (hi - lo), 0.0, 1.0))
+                agent_trajectories[name].append(val)
+
+        first_agent_name = list(selected_agents.keys())[0]
+        action_to_step = agent_trajectories[first_agent_name][-1]
+        
+        _, next_state, done = env.step(action_to_step)
+        prices.append(env.spot)
+        bsm_pos.append(bs_delta(env.spot, env.strike, env.rate, env.maturity, vol))
+>>>>>>> origin/resultBranch
         state = next_state
    
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True,
-                                   gridspec_kw={"height_ratios": [1, 2]})
-    fig.suptitle("Hedge trajectory - one simulated episode", fontsize=13)
-
-    ax1.plot(range(len(prices)), prices, color="black", linewidth=1.5)
-    ax1.set_ylabel("Asset price", fontsize=11)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+    fig.suptitle("Hedge trajectories on one simulated price path", fontsize=13)
+    ax1.plot(prices, color="black", label="Asset Price")
+    ax1.legend()
     ax1.grid(True, alpha=0.25)
-
-    ax2.plot(range(len(bsm_pos)), bsm_pos,
-             color=COLORS["BSM"], linewidth=2, linestyle="--", label="BSM delta")
-    for name, p in pos.items():
-        ax2.plot(range(len(p)), p,
-                 color=COLORS[name], linewidth=1.4, alpha=0.85, label=name)
-
-    ax2.set_xlabel("Time step", fontsize=11)
-    ax2.set_ylabel("Hedge ratio", fontsize=11)
+    ax1.set_ylabel("Asset Price")
+    
+    ax2.plot(bsm_pos, color=COLORS["BSM"], linestyle="--", label="BSM Delta")
+    for name, trajectory in agent_trajectories.items():
+        ax2.plot(trajectory, color=COLORS.get(name, "black"), label=name)
+    
     ax2.set_ylim(-0.05, 1.05)
-    ax2.legend(fontsize=10)
+    ax2.legend()
+    ax2.set_xlabel("Time step")
+    ax2.set_ylabel("Hedge ratio")
     ax2.grid(True, alpha=0.25)
+<<<<<<< HEAD
     plt.tight_layout()
     plt.savefig("plot_hedge_trajectory.png", dpi=150, bbox_inches="tight")
     plt.show()
@@ -619,3 +637,6 @@ def get_policy_3d_grids(dqn_agent, ddpg_agent, td3_agent, hybrid_agent, actions_
                     grids["Hybrid"][i, j] = lo + raw * (hi - lo)
                 
     return grids
+=======
+    plt.show()
+>>>>>>> origin/resultBranch
