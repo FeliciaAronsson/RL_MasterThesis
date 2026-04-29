@@ -3,8 +3,6 @@ from utils.bs import bs_price
 
 def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vol, init_pos, dT, mu, kappa):
 
-    np.random.seed(0)
-
     # Simulate
     sim_paths = np.zeros((n_steps + 1, n_trails))
     sim_times = np.linspace(0, maturity, n_steps + 1)

@@ -8,7 +8,7 @@ class HybridAgent:
         self.actions_list = actions_list 
 
     def select(self, state):
-        # DQN selects coarse bin
+        # DQN selects bin
         bin_idx = self.dqn.select(state)
         lower_bound = self.actions_list[bin_idx]
         upper_bound = (
@@ -21,8 +21,17 @@ class HybridAgent:
         raw_td3 = self.td3.select(state)
 
         # Rescale TD3 output to [lower_bound, upper_bound]
-        action = lower_bound + raw_td3 * (upper_bound - lower_bound)
-        action = float(np.clip(action, 0.0, 1.0))
+        if raw_td3 < lower_bound:
+            action = lower_bound - raw_td3 * (upper_bound - lower_bound)
+            action = float(np.clip(action, 0.0, 1.0))
+             
+        elif raw_td3 == lower_bound:
+            action = lower_bound
+            action = float(np.clip(action, 0.0, 1.0))
+             
+        else:
+            action = lower_bound + raw_td3 * (upper_bound - lower_bound)
+            action = float(np.clip(action, 0.0, 1.0))
 
         return action, bin_idx, raw_td3
 

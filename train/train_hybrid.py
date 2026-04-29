@@ -21,15 +21,13 @@ def train_hybrid(episodes, env, agent, batch_size, score_window_length, stop_avg
         done = False
 
         while not done:
-            # Agent selects action using DQN (coarse) + TD3 (fine)
-            # and stores the transition in each sub-agent's replay buffer
             action, bin_idx, raw_td3 = agent.select(state)
             reward, next_state, done = env.step(action)
 
-            # DQN learns to select the right bin — stores bin index as action
+            # DQN learns to select the right bin, stores bin index as action
             agent.dqn.buffer.add(state, bin_idx, reward, next_state, done)
 
-            # TD3 learns to fine-tune within the bin — stores its raw output
+            # TD3 learns to fine-tune within the bin, stores its raw output
             agent.td3.buffer.add(state, raw_td3, reward, next_state, done)
 
             # Train both sub-agents
@@ -53,25 +51,15 @@ def train_hybrid(episodes, env, agent, batch_size, score_window_length, stop_avg
 
 def train_hybrid_sequential(episodes_dqn, episodes_td3, env, agent, batch_size, score_window_length, stop_avg_reward):
     """
-    Two-phase sequential training for the HybridAgent.
+    Two-phase sequential training for the HybridAgent.  
     Phase 1: Train DQN alone to learn coarse bin selection.
     Phase 2: Freeze DQN. Train TD3 to fine-tune within the bin DQN selects.           
     """
 
     # Phase 1: Train DQN ───
-    print("Phase 1: Training DQN for coarse bin selection...")
-
-    dqn_rewards = train_DQN(
-        int(episodes_dqn), env, agent.dqn,
-        batch_size, agent.actions_list,
-        score_window_length, stop_avg_reward
-    )
-
-    print("Phase 1 complete. Freezing DQN.\n")
+    dqn_rewards = train_DQN(int(episodes_dqn), env, agent.dqn, batch_size, agent.actions_list, score_window_length, stop_avg_reward)
 
     # Phase 2: Train TD3 with DQN frozen
-    print("Phase 2: Training TD3 for fine-grained adjustment...")
-
     td3_rewards = []
     score_window = deque(maxlen=score_window_length)
 
@@ -82,22 +70,7 @@ def train_hybrid_sequential(episodes_dqn, episodes_td3, env, agent, batch_size, 
         done = False
 
         while not done:
-            # DQN selects bin 
-            bin_idx = agent.dqn.select(state, train=False)
-            lower_bound = agent.actions_list[bin_idx]
-            upper_bound = (
-                agent.actions_list[bin_idx + 1]
-                if bin_idx + 1 < len(agent.actions_list)
-                else 1.0
-            )
-
-            # TD3 fine-tunes within the bin
-            raw_td3 = agent.td3.select(state)
-            action = np.clip(
-                lower_bound + raw_td3 * (upper_bound - lower_bound),
-                0.0, 1.0
-            )
-
+            action, bin_idx, raw_td3 = agent.select(state)
             reward, next_state, done = env.step(action)
 
             # Only TD3's buffer is updated, DQN is frozen
@@ -118,6 +91,5 @@ def train_hybrid_sequential(episodes_dqn, episodes_td3, env, agent, batch_size, 
         if avg_reward > stop_avg_reward and len(score_window) == score_window.maxlen:
             print("Stopping: Average reward threshold reached")
             break
-
-    print("Phase 2 complete.")
-    return dqn_rewards, td3_rewards
+        
+    return td3_rewards
