@@ -362,7 +362,7 @@ def build_report(
             shared_xaxes=True,
             vertical_spacing=0.08,
             row_heights=[0.3, 0.7],
-            subplot_titles=("Asset Price Path", "Agent Hedge Positions (Delta)")
+            subplot_titles=("BSM", "Agent Hedge Positions (Delta)")
         )
         # Add BSM as a semi-transparent reference surface that is always visible
         fig_3d.add_trace(go.Surface(
