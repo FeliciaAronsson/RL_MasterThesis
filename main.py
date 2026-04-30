@@ -1,4 +1,6 @@
 import numpy as np
+import torch
+import os as os
 from config import (SPOT, STRIKE, MATURITY, VOL, MU, DT, KAPPA, C, INIT_POSITION, R, TAU, GAMMA, LEARN_RATE, STATE_DIM, ACTION_DIM, HIDDEN_DIM, BATCH_SIZE,
                     ACTIONS_LIST, ACTION_DIMENSION, EPISODES, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD, PLOT, REPORT)
 
@@ -26,7 +28,11 @@ RUN_CONFIG = {
     "DQN":    True,
     "DDPG":   True,
     "TD3":    True,
+<<<<<<< HEAD
     "Hybrid": False,
+=======
+    "Hybrid": True,
+>>>>>>> origin/main
     "Hybrid Sequential": False,
 }
 
@@ -57,6 +63,8 @@ if RUN_CONFIG["DDPG"]:
     ## Train DDPG without OU noise for comparison
     # rewards["DDPG"] = train_DDPG_TD3_without_OU_noise(EPISODES, env, agents["DDPG"], BATCH_SIZE, min_noise = 0.01, noise_scale = 0.02, noise_decay = 0.9995, score_window_length=SCORE_WINDOW_LENGTH, stop_avg_reward=STOP_AVG_REWARD)
 
+    torch.save(agents["DDPG"].actor.state_dict(), "saved_models/ddpg_actor.pth")
+
 if RUN_CONFIG["TD3"]:
     agents["TD3"] = TD3Agent(STATE_DIM, ACTION_DIM, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
     rewards["TD3"] = train_DDPG_TD3(EPISODES, env, agents["TD3"], BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
@@ -64,6 +72,8 @@ if RUN_CONFIG["TD3"]:
 
     ## Train TD3 without OU noise for comparison
     #rewards["TD3"] = train_DDPG_TD3_without_OU_noise(EPISODES, env, agents["TD3"], BATCH_SIZE, min_noise = 0.01, noise_scale = 0.02, noise_decay = 0.9995, score_window_length=SCORE_WINDOW_LENGTH, stop_avg_reward=STOP_AVG_REWARD)
+
+    torch.save(agents["TD3"].actor.state_dict(), "saved_models/td3_actor.pth")
 
 if RUN_CONFIG["Hybrid"]:
     hybrid_dqn = DQNAgent(STATE_DIM, ACTION_DIMENSION, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
@@ -108,12 +118,12 @@ if PLOT:
     plot_policy_3d(agents, ACTIONS_LIST, MATURITY, VOL)
     plot_hedge_trajectory(env, agents, ACTIONS_LIST, VOL)
 
-# if REPORT:
-#     build_report(
-#         Cost_BSM, Cost_DDPG, Cost_DQN, Cost_TD3, Cost_hybrid, OptionPrice,
-#         episode_rewards_DDPG, episode_rewards_DQN,
-#         episode_rewards_TD3, episode_rewards_HYBRID,
-#         output_path="hedging_report.html"
-#     )
+from datetime import datetime
+
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+if REPORT: 
+    build_report( agent_costs=agent_costs, rewards=rewards, OptionPrice=OptionPrice, 
+                 selected_agents=agents, actions_list=ACTIONS_LIST, maturity=MATURITY, vol=VOL, env=env, output_path=f"hedging_report_{timestamp}.html")
 
 print("Done!")

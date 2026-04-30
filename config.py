@@ -28,7 +28,11 @@ ACTIONS_LIST     = np.linspace(0, 1, 21)
 ACTION_DIMENSION = len(ACTIONS_LIST)
 
 # Training
+<<<<<<< HEAD
 EPISODES            = 2000
+=======
+EPISODES            = 1000
+>>>>>>> origin/main
 SCORE_WINDOW_LENGTH = 200
 STOP_AVG_REWARD     = 0
 
