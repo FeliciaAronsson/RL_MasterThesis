@@ -116,7 +116,7 @@ def plot_learningcurve_grid(all_rewards,
         ax.set_ylabel("Total reward", fontsize=10)
         ax.legend(fontsize=9)
         ax.grid(True, alpha=0.25)
-
+    plt.ylim(-200,10)
     plt.tight_layout()
     plt.savefig("plot_learningcurve_grid.png", dpi=150, bbox_inches="tight")
     plt.show()
@@ -172,24 +172,92 @@ def plot_policy_3d(selected_agents, actions_list, maturity, vol, n_grid=25):
     fig = plt.figure(figsize=(6 * cols, 5 * rows))
     fig.suptitle("3D Policy Surfaces: Hedge Ratio (Δ) vs Moneyness & TTM", fontsize=16)
 
+    # for i, (name, grid) in enumerate(plot_list):
+    #     ax = fig.add_subplot(rows, cols, i + 1, projection='3d')
+        
+    #     # Plot surface
+    #     surf = ax.plot_surface(T, M, grid, cmap=cm.RdYlGn, vmin = 0, vmax = 1,
+    #                            linewidth=0, antialiased=True, alpha=0.8)
+
+    #     color = COLORS.get(name.split()[0], "black")
+    #     ax.set_title(name, fontsize=12, fontweight='bold', color=color)
+    #     ax.set_xlabel('TTM')
+    #     ax.set_ylabel('Moneyness (S/K)')
+    #     ax.set_zlabel('Hedge Ratio')
+    #     ax.set_zlim(0, 1)
+    #     ax.view_init(elev=30, azim=-135)
+
+    
+    # plt.savefig("plot_policy_3d_dynamic.png", dpi=150)
+    # plt.show()
+
+
+
     for i, (name, grid) in enumerate(plot_list):
+
+        # ---------------------------
+        # Combined subplot figure
+        # ---------------------------
         ax = fig.add_subplot(rows, cols, i + 1, projection='3d')
-        
-        # Plot surface
-        surf = ax.plot_surface(T, M, grid, cmap=cm.RdYlGn, 
-                               linewidth=0, antialiased=True, alpha=0.8)
-        
+
+        surf = ax.plot_surface(
+            T,
+            M,
+            grid,
+            cmap=cm.RdYlGn,
+            vmin=0,
+            vmax=1,
+            linewidth=0,
+            antialiased=True,
+            alpha=0.8
+        )
+
         color = COLORS.get(name.split()[0], "black")
+
         ax.set_title(name, fontsize=12, fontweight='bold', color=color)
         ax.set_xlabel('TTM')
         ax.set_ylabel('Moneyness (S/K)')
-        ax.set_zlabel('Hedge Ratio')
+        ax.set_zlabel('Hedge Ratio', labelpad = 12)
         ax.set_zlim(0, 1)
         ax.view_init(elev=30, azim=-135)
 
-    plt.tight_layout()
-    plt.savefig("plot_policy_3d_dynamic.png", dpi=150)
-    plt.show()
+        # ---------------------------
+        # Individual figure
+        # ---------------------------
+        fig_single = plt.figure(figsize=(8, 7))
+        ax_single = fig_single.add_subplot(111, projection='3d')
+
+        surf_single = ax_single.plot_surface(
+            T,
+            M,
+            grid,
+            cmap=cm.RdYlGn,
+            vmin=0,
+            vmax=1,
+            linewidth=0,
+            antialiased=True,
+            alpha=0.85
+        )
+
+        ax_single.set_title(name, fontsize=14, fontweight='bold', color=color)
+        ax_single.set_xlabel('TTM')
+        ax_single.set_ylabel('Moneyness (S/K)')
+        ax_single.set_zlabel('Hedge Ratio')
+
+        ax_single.set_zlim(0, 1)
+        ax_single.view_init(elev=30, azim=-135)
+
+        fig_single.colorbar(
+             surf_single,
+             ax=ax_single,
+             shrink=0.65,
+             label='Hedge Ratio'
+         )
+
+        filename = f"policy_surface_{name.lower().replace(' ', '_')}.png"
+
+        plt.savefig(filename, dpi=300, bbox_inches='tight', pad_inches = 0.3)
+        plt.close(fig_single)
 
 def plot_hedge_trajectory(env, selected_agents, actions_list, vol):
     state = env.reset()
@@ -249,3 +317,4 @@ def plot_hedge_trajectory(env, selected_agents, actions_list, vol):
     ax2.set_ylabel("Hedge ratio")
     ax2.grid(True, alpha=0.25)
     plt.show()
+

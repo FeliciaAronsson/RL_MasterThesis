@@ -14,7 +14,7 @@ R             = 0
 
 # RL Hyperparameters
 TAU        = 5e-4
-GAMMA      = 0.9995
+GAMMA      = 0.99
 LEARN_RATE = 1e-4
 
 # Network architecture 
@@ -27,12 +27,13 @@ BATCH_SIZE = 64
 ACTIONS_LIST     = np.linspace(0, 1, 21)
 ACTION_DIMENSION = len(ACTIONS_LIST)
 
+# DQN NOISE, EPSILON GREEDY
+EPSILON_START = 1.0
+EPSILON_DECAY = 0.995
+EPSILON_MIN = 0.01
+
 # Training
-<<<<<<< HEAD
-EPISODES            = 2000
-=======
-EPISODES            = 1000
->>>>>>> origin/main
+EPISODES            = 5000
 SCORE_WINDOW_LENGTH = 200
 STOP_AVG_REWARD     = 0
 

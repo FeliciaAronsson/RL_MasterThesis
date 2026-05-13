@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import os as os
 from config import (SPOT, STRIKE, MATURITY, VOL, MU, DT, KAPPA, C, INIT_POSITION, R, TAU, GAMMA, LEARN_RATE, STATE_DIM, ACTION_DIM, HIDDEN_DIM, BATCH_SIZE,
-                    ACTIONS_LIST, ACTION_DIMENSION, EPISODES, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD, PLOT, REPORT)
+                    ACTIONS_LIST, ACTION_DIMENSION, EPISODES, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD, PLOT, REPORT, EPSILON_START, EPSILON_DECAY, EPSILON_MIN)
 
 from env.hedging_env import HedgingEnv
 from utils.bs import bs_delta, bs_price
@@ -23,16 +23,14 @@ import os as os
 import torch 
 import pickle
 
+from datetime import datetime
+
 # Choice of which agents to run and evaluate.
 RUN_CONFIG = {
     "DQN":    True,
     "DDPG":   True,
     "TD3":    True,
-<<<<<<< HEAD
-    "Hybrid": False,
-=======
     "Hybrid": True,
->>>>>>> origin/main
     "Hybrid Sequential": False,
 }
 
@@ -52,7 +50,7 @@ if not os.path.exists(save_path):
 
 ### Training ###
 if RUN_CONFIG["DQN"]:
-    agents["DQN"] = DQNAgent(STATE_DIM, ACTION_DIMENSION, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
+    agents["DQN"] = DQNAgent(STATE_DIM, ACTION_DIMENSION, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE, EPSILON_START, EPSILON_DECAY, EPSILON_MIN)
     rewards["DQN"] = train_DQN(EPISODES, env, agents["DQN"], BATCH_SIZE, ACTIONS_LIST, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
     torch.save(agents["DQN"].qnet.state_dict(), "saved_models/dqn_qnet.pth")
 
@@ -76,14 +74,14 @@ if RUN_CONFIG["TD3"]:
     torch.save(agents["TD3"].actor.state_dict(), "saved_models/td3_actor.pth")
 
 if RUN_CONFIG["Hybrid"]:
-    hybrid_dqn = DQNAgent(STATE_DIM, ACTION_DIMENSION, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
+    hybrid_dqn = DQNAgent(STATE_DIM, ACTION_DIMENSION, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE,  EPSILON_START, EPSILON_DECAY, EPSILON_MIN)
     hybrid_td3 = TD3Agent(STATE_DIM, ACTION_DIM, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
     agents["Hybrid"] = HybridAgent(hybrid_dqn, hybrid_td3, ACTIONS_LIST)
     rewards["Hybrid"] = train_hybrid(EPISODES, env, agents["Hybrid"], BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
 
 
 if RUN_CONFIG["Hybrid Sequential"]:
-    hybrid_dqn_sequential = DQNAgent(STATE_DIM, ACTION_DIMENSION, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
+    hybrid_dqn_sequential = DQNAgent(STATE_DIM, ACTION_DIMENSION, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE, EPSILON_START, EPSILON_DECAY, EPSILON_MIN)
     hybrid_td3_sequential = TD3Agent(STATE_DIM, ACTION_DIM, HIDDEN_DIM, TAU, GAMMA, LEARN_RATE)
     agents["Hybrid Sequential"] = HybridAgent(hybrid_dqn_sequential, hybrid_td3_sequential, ACTIONS_LIST)
     rewards["Hybrid Sequential"] = train_hybrid_sequential(EPISODES, EPISODES, env, agents["Hybrid Sequential"], BATCH_SIZE, SCORE_WINDOW_LENGTH, STOP_AVG_REWARD)
@@ -110,15 +108,23 @@ for name, agent in agents.items():
 
 ### Results and graphs ###
 print_hedge_table(agent_costs, OptionPrice)
+for name, cost in agent_costs.items():
+    mean_error = np.mean(cost)
+    std_error = np.std(cost)
+    rmse = np.sqrt(np.mean(cost**2)) # Root mean sqare error
+
+    print(f"agent :{name}")
+    print(f" Average Hedging error:{mean_error:.4f}")
+    print(f" Std (Risk): {std_error:.4f}")
+    print(f" RMSE: {rmse:.4f}")
 
 if PLOT:
     plot_histogram(agent_costs)
-    plot_learningcurve(rewards)
-    plot_learningcurve_grid(rewards)
+    #plot_learningcurve(rewards)
+    #plot_learningcurve_grid(rewards)
     plot_policy_3d(agents, ACTIONS_LIST, MATURITY, VOL)
-    plot_hedge_trajectory(env, agents, ACTIONS_LIST, VOL)
-
-from datetime import datetime
+    #plot_hedge_trajectory(env, agents, ACTIONS_LIST, VOL)
+   
 
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 

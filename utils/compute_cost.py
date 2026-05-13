@@ -61,11 +61,16 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
             if timeidx == n_steps: 
                 # Final step (matuarity)
                 rew[timeidx - 1, :] -= pos_next * sim_paths[timeidx, :] * kappa
+                payoff = np.maximum(sim_paths[timeidx, :] - strike, 0)
                 
             else:
                 pos_prev = pos_next
                 pos_next = policy(sim_paths[timeidx,:]/strike, T_next, pos_prev) 
                 
+ 
+    portfolio = pos_next * sim_paths[-1, :]
     perCost = np.sum(rew, axis = 0)
 
-    return perCost
+    hedging_error = portfolio - payoff
+
+    return perCost #, hedging_error

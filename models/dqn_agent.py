@@ -12,7 +12,7 @@ class DQNAgent:
     It consists of a Q-network that estimates the Q-values for each action given a state, and a target Q-network that is used to stabilize training. 
     The agent also includes a replay buffer to store transitions and an epsilon-greedy strategy for action selection during training."""
 
-    def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate, epsilon_start=1.0, epsilon_decay = 0.995, epsilon_min = 0.01):
+    def __init__(self, obs_dim, act_dim, hidden_dim, tau, gamma, learnRate, epsilon_start, epsilon_decay, epsilon_min):
         self.tau = tau
         self.gamma = gamma
         self.act_dim = act_dim
