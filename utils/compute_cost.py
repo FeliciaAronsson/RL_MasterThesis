@@ -41,4 +41,4 @@ def compute_cost(policy, n_trails, n_steps, spot, strike, maturity, rate, exp_vo
             
     perCost = np.sum(rew, axis = 0)
 
-    return perCost
+    return perCost, sim_paths[-1,:]

@@ -8,7 +8,7 @@ VOL           = 0.2
 MU            = 0.05
 DT            = 1 / 250
 KAPPA         = 0.01
-C             = 1.5
+C             = 1.5 
 INIT_POSITION = 0
 R             = 0
 
@@ -27,10 +27,15 @@ BATCH_SIZE = 64
 ACTIONS_LIST     = np.linspace(0, 1, 11)
 ACTION_DIMENSION = len(ACTIONS_LIST)
 
+# DQN NOISE, EPSILON GREEDY
+EPSILON_START = 1.0
+EPSILON_DECAY = 0.995
+EPSILON_MIN = 0.01
+
 # Training
-EPISODES            = 1000
+EPISODES            = 5000
 SCORE_WINDOW_LENGTH = 200
-STOP_AVG_REWARD     = 0
+STOP_AVG_REWARD     = 20
 
 # Output
 PLOT = True

@@ -441,7 +441,7 @@ def build_report(
             margin=dict(l=20, r=20, t=50, b=20),
         )
         fig_ind.update_xaxes(showgrid=True, gridcolor="#eee", title_text="Episode")
-        fig_ind.update_yaxes(showgrid=True, gridcolor="#eee", title_text="Reward")
+        fig_ind.update_yaxes(showgrid=True, gridcolor="#eee", title_text="Reward", range=[-200,10])
 
         sections.append(f"""
 <div class="section">

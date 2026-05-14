@@ -2,11 +2,12 @@ import math
 
 import pandas as pd
 import numpy as np
+
 import matplotlib.pyplot as plt
-import seaborn as sns
+from matplotlib import cm
+
 import torch
 from utils.bs import bs_delta
-from matplotlib import cm
 
 COLORS = {
     "BSM":    "#2196F3",
@@ -18,26 +19,48 @@ COLORS = {
 }
 
 
-def print_hedge_table(agent_costs, OptionPrice):
+
+
+
+def print_hedge_table(agent_costs, OptionPrice, S_T=None, strike=None):
     """
     Summary table of hedging performance for all agents.
-    Reports mean cost, std, mean/std ratio, and worst-case (5th percentile).
-    All values expressed as percentage of option price.
+    Reports mean cost, std expressed as percentage of option price.
+    If S_T is provided, also reports hedging error (V_T - H_T) at maturity.
     """
+    option_premium = OptionPrice
+
     data = {}
     for name, cost in agent_costs.items():
-        mean  = -np.mean(cost)
-        std   =  np.std(cost)
-        data[name] = 100 * np.array([mean, std]) / OptionPrice
+        cost = np.array(cost)
+        mean = -np.mean(cost)
+        std  =  np.std(cost)
+        row  = [mean / OptionPrice * 100, std / OptionPrice * 100]
 
-    HedgeComp = pd.DataFrame(
-        data,
-        index = ["Mean hedge cost (% option price)", "Std hedge cost  (% option price)"]
-    )
+        if S_T is not None and strike is not None:
+            option_payoff  = np.maximum(S_T - strike, 0)
+            H_T            = cost + option_premium
+            hedging_error  = option_payoff - H_T
+            row += [
+                np.mean(hedging_error),
+                np.std(hedging_error),
+                np.sqrt(np.mean(hedging_error**2))
+            ]
+
+        data[name] = row
+
+    index = ["Mean hedge cost (%)", "Std hedge cost (%)"]
+    if S_T is not None:
+        index += ["Mean hedging error", "Std hedging error", "RMSE hedging error"]
+
+    HedgeComp = pd.DataFrame(data, index=index)
+
     print("\n" + "="*80)
-    print("  Hedging Performance Summary ")
+    print("  Hedging Performance Summary")
     print("="*80)
     print(HedgeComp.round(3).to_string())
+    print("="*80 + "\n")
+    print(f"Option price: {OptionPrice:.4f}")
     print("="*80 + "\n")
 
 
@@ -115,12 +138,12 @@ def plot_learningcurve_grid(all_rewards,
         ax.set_ylabel("Total reward", fontsize=10)
         ax.legend(fontsize=9)
         ax.grid(True, alpha=0.25)
-
+    plt.ylim(-200,10)
     plt.tight_layout()
     plt.savefig("plot_learningcurve_grid.png", dpi=150, bbox_inches="tight")
     plt.show()
 
-def plot_policy_3d(selected_agents, actions_list, maturity, vol, n_grid=25):
+def plot_policy_3d(selected_agents, actions_list, maturity, vol, n_grid=50):
     """
     3D Surface plots of policy (hedge ratio) vs Moneyness and TTM.
     """
@@ -172,23 +195,70 @@ def plot_policy_3d(selected_agents, actions_list, maturity, vol, n_grid=25):
     fig.suptitle("3D Policy Surfaces: Hedge Ratio (Δ) vs Moneyness & TTM", fontsize=16)
 
     for i, (name, grid) in enumerate(plot_list):
+
+        # ---------------------------
+        # Combined subplot figure
+        # ---------------------------
         ax = fig.add_subplot(rows, cols, i + 1, projection='3d')
-        
-        # Plot surface
-        surf = ax.plot_surface(T, M, grid, cmap=cm.RdYlGn, 
-                               linewidth=0, antialiased=True, alpha=0.8)
-        
+
+        surf = ax.plot_surface(
+            T,
+            M,
+            grid,
+            cmap=cm.RdYlGn,
+            vmin=0,
+            vmax=1,
+            linewidth=0,
+            antialiased=True,
+            alpha=0.8
+        )
+
         color = COLORS.get(name.split()[0], "black")
+
         ax.set_title(name, fontsize=12, fontweight='bold', color=color)
         ax.set_xlabel('TTM')
         ax.set_ylabel('Moneyness (S/K)')
-        ax.set_zlabel('Hedge Ratio')
+        ax.set_zlabel('Hedge Ratio', labelpad = 12)
         ax.set_zlim(0, 1)
         ax.view_init(elev=30, azim=-135)
 
-    plt.tight_layout()
-    plt.savefig("plot_policy_3d_dynamic.png", dpi=150)
-    plt.show()
+        # ---------------------------
+        # Individual figure
+        # ---------------------------
+        fig_single = plt.figure(figsize=(8, 7))
+        ax_single = fig_single.add_subplot(111, projection='3d')
+
+        surf_single = ax_single.plot_surface(
+            T,
+            M,
+            grid,
+            cmap=cm.RdYlGn,
+            vmin=0,
+            vmax=1,
+            linewidth=0,
+            antialiased=True,
+            alpha=0.85
+        )
+
+        ax_single.set_title(name, fontsize=14, fontweight='bold', color=color)
+        ax_single.set_xlabel('TTM')
+        ax_single.set_ylabel('Moneyness (S/K)')
+        ax_single.set_zlabel('Hedge Ratio')
+
+        ax_single.set_zlim(0, 1)
+        ax_single.view_init(elev=30, azim=-135)
+
+        # fig_single.colorbar(
+        #      surf_single,
+        #      ax=ax_single,
+        #      shrink=0.65,
+        #      label='Hedge Ratio'
+        #  )
+
+        filename = f"policy_surface_{name.lower().replace(' ', '_')}.png"
+
+        plt.savefig(filename, dpi=300, bbox_inches='tight', pad_inches = 0.3)
+        plt.close(fig_single)
 
 def plot_hedge_trajectory(env, selected_agents, actions_list, vol):
     state = env.reset()
@@ -200,6 +270,7 @@ def plot_hedge_trajectory(env, selected_agents, actions_list, vol):
     agent_trajectories = {name: [] for name in selected_agents.keys()}
 
     while not done:
+        state = np.array(state)
         s = torch.tensor([state], dtype=torch.float32)
         
         for name, agent in selected_agents.items():
@@ -228,6 +299,7 @@ def plot_hedge_trajectory(env, selected_agents, actions_list, vol):
         prices.append(env.spot)
         bsm_pos.append(bs_delta(env.spot, env.strike, env.rate, env.maturity, vol))
         state = next_state
+   
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
     fig.suptitle("Hedge trajectories on one simulated price path", fontsize=13)
@@ -245,4 +317,5 @@ def plot_hedge_trajectory(env, selected_agents, actions_list, vol):
     ax2.set_xlabel("Time step")
     ax2.set_ylabel("Hedge ratio")
     ax2.grid(True, alpha=0.25)
+    plt.savefig("hedging_trajectory.png", dpi=150, bbox_inches="tight")
     plt.show()
